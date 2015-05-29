@@ -75,10 +75,10 @@ public class EntryPoint {
 	public boolean cluster() {
 
 		/* Crawls data from maven forum */
-		webCrawler.processRequest();
+		webCrawler.processRequest(true);
 
 		/* Applies PosTagging for the data */
-		posTagger.tagDocuments();
+		//posTagger.tagDocuments();
 		return true;
 	}
 }
