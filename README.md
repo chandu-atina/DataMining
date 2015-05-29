@@ -27,7 +27,7 @@ This project has various phases which involves the sequence of steps.
 7) Clustering
   >> Apply clustering algorithm to form Clusters.
   
-# Note
+Note
 ======
 You need to checkout web-crawler project as well in order to work with DataMining. DataMining project has internally dependencies on web-crawler project.
 
