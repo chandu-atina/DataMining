@@ -61,7 +61,7 @@ public class ClusterServiceException extends ServiceException
 	}
 	
 	public ClusterServiceException(ErrorMessages errors) {
-		super(errors.toString());
+		super(errors);
 		if(errors != null) {
 			this.errors = errors;
 		}

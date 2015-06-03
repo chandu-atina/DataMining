@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.crawl.web.util.ApplicationProperties;
-import com.mining.ForumMining.EntryPoint;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.PoSTagger;
 
@@ -47,6 +46,7 @@ public class OpenNLPPosTagger implements PoSTagger {
 	@Autowired
 	ApplicationProperties appProp;
 
+	@SuppressWarnings("deprecation")
 	public String tagContent(String content) throws ClusterServiceException {
 
 		InputStream modelIn = null;
@@ -93,6 +93,7 @@ public class OpenNLPPosTagger implements PoSTagger {
 		return true;
 	}
 
+	@SuppressWarnings("deprecation")
 	public boolean tagFile(Path filePath) throws IOException {
 		BufferedReader reader = Files.newBufferedReader(filePath,
 				StandardCharsets.UTF_8);
