@@ -3,10 +3,8 @@ package com.mining.ForumMining.service.impl;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -23,17 +21,27 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.tartarus.snowball.ext.PorterStemmer;
 
 import com.crawl.web.util.ApplicationProperties;
 import com.mining.ForumMining.constants.MiningConstants;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.StopWordService;
+
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.CoreMap;
 
 /* @param <E> the type of elements in this list */
 public class StopWordServiceImpl implements StopWordService {
@@ -42,6 +50,8 @@ public class StopWordServiceImpl implements StopWordService {
 
 	@Autowired
 	ApplicationProperties appProp;
+
+	PorterStemmer stem = new PorterStemmer();
 
 	public void removeStopWords() throws ClusterServiceException {
 
@@ -118,11 +128,11 @@ public class StopWordServiceImpl implements StopWordService {
 			String s = st.nextToken();
 			if (MiningConstants.POSTAG_LIST
 					.contains(s.substring(s.indexOf("/") + 1))) {
-
-				MutableInt count = keyWords.get(s.substring(0, s.indexOf("/")));
+				String stemmedWord = getStemmedWord(s.substring(0,
+						s.indexOf("/")).toLowerCase());
+				MutableInt count = keyWords.get(stemmedWord);
 				if (count == null) {
-					keyWords.put(s.substring(0, s.indexOf("/")),
-							new MutableInt());
+					keyWords.put(stemmedWord, new MutableInt());
 				} else {
 					count.increment();
 				}
@@ -134,7 +144,7 @@ public class StopWordServiceImpl implements StopWordService {
 		Set<String> keySet = keyWords.keySet();
 
 		List<String> words = FileUtils.readLines(new File(
-				"data/stop_word/stopwords"), "utf-8");
+				"data/stop_word/stopwords_lemmatized"), "utf-8");
 		keySet.removeAll(new HashSet<String>(words));
 		log.info(keyWords.size());
 		log.info(keyWords);
@@ -208,6 +218,29 @@ public class StopWordServiceImpl implements StopWordService {
 			// TODO add proper exception
 		}
 		return true;
+	}
+
+	public String getStemmedWord(String word) {
+		stem.setCurrent(word);
+		stem.stem();
+		String text = stem.getCurrent();
+		String lemma = "";
+
+		Properties props = new Properties();
+		props.put("annotators", "tokenize, ssplit, pos, lemma");
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
+		// String text = "ran run running update updates updated";
+		edu.stanford.nlp.pipeline.Annotation document = pipeline.process(text);
+
+		for (CoreMap sentence : document.get(SentencesAnnotation.class)) {
+			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+				// String word = token.get(TextAnnotation.class);
+				lemma = token.get(LemmaAnnotation.class);
+				System.out.println("lemmatized version :" + lemma);
+			}
+		}
+
+		return lemma;
 	}
 }
 
