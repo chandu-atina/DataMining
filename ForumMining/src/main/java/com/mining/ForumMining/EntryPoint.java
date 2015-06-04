@@ -22,6 +22,7 @@ import com.crawl.web.exception.WebCrawlerServiceException;
 import com.crawl.web.service.CrawlerService;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.PoSTagger;
+import com.mining.ForumMining.service.StopWordService;
 
 /**
  * EntryPoint is a entry point for clustering of forum data This is a main class
@@ -42,6 +43,8 @@ public class EntryPoint {
 	@Qualifier("MultiThreadedWebCrawlerServiceImpl")
 	CrawlerService webCrawler;
 
+	@Autowired
+	StopWordService stopWordService;
 	/**
 	 * main method is the starting point of clustering
 	 */
@@ -79,6 +82,9 @@ public class EntryPoint {
 
 		/* Applies PosTagging for the data */
 		//posTagger.tagDocuments();
+		
+		/* Removes stop words, stemming and lemmatization */
+		stopWordService.removeStopWords();
 		return true;
 	}
 }
