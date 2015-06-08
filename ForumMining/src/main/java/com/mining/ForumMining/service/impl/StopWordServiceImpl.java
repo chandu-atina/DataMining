@@ -3,8 +3,13 @@ package com.mining.ForumMining.service.impl;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -102,7 +107,9 @@ public class StopWordServiceImpl implements StopWordService {
 		//writeListToFile(globalCorpus, filePath,"stopword");
 		//tfidfService.TFCalculation(globalCorpus);
 		//log.info(globalCorpus);
-		writeListToFile(globalCorpus, files.get(0),"globalcorpa");
+		writeListToFile(globalCorpus, files.get(0),"globalcorpa",true,false);
+		
+		calculateTFIDFForAllDocuments(files,globalCorpus);
 		
 	}
 
@@ -149,6 +156,7 @@ public class StopWordServiceImpl implements StopWordService {
 		while ((line = reader.readLine()) != null) {
 			content.append(line);
 		}
+		boolean isCurrentDocCounted=false;
 		// log.info(content);
 		StringTokenizer st = new StringTokenizer(content.toString());
 		while (st.hasMoreTokens()) {
@@ -180,10 +188,15 @@ public class StopWordServiceImpl implements StopWordService {
 				CorpusValue globalcount = globalCorpus.get(stemmedWord);
 				if (globalcount == null) {
 					globalCorpus.put(stemmedWord, new CorpusValue(docCount));
+					isCurrentDocCounted=true;
 				} else {
 					globalcount.increment();
+					if(!isCurrentDocCounted){
+						globalcount.incrementDFT();
+						//if(count !=null)
+						//	count.setTf(globalcount.getTf());
+					}
 				}
-				
 			}
 		}
 		keyWords = sortByValue(keyWords);
@@ -196,10 +209,11 @@ public class StopWordServiceImpl implements StopWordService {
 		keySet.removeAll(new HashSet<String>(words));
 		log.info(keyWords.size());
 		log.info(keyWords);
-		writeListToFile(keyWords, filePath,"stopword");
-		tfidfService.TFCalculation(keyWords);
+		//writeListToFile(keyWords, filePath,"stopword",true,false);
+		tfidfService.calculateTF(keyWords);
 		log.info(keyWords);
-		writeListToFile(keyWords, filePath,"weightage");
+		writeListToFile(keyWords, filePath,"weightage",true,true);
+		
 		
 		// log.info(keyWords);
 	}
@@ -243,31 +257,40 @@ public class StopWordServiceImpl implements StopWordService {
 		return result;
 	}
 
-	public boolean writeListToFile(Map hmap, Path filePath,String pathKeyword) {
+	public boolean writeListToFile(Map hmap, Path filePath,String pathKeyword,
+			boolean writeToFileFlag, boolean serializeDataFlag) {
 
 		/*
 		 * filePath :
 		 * /var/tmp/mail/201407_tagged/<53C7EE0A.9070803@gmx.de>.tagged
 		 */
-
-		String filePathString = filePath.toString().replace("tagged",
-				pathKeyword);
-
 		try {
-			File file = new File(filePathString);
-			file.getParentFile().mkdirs();
-			file.createNewFile();
+			if(writeToFileFlag){
+				String filePathString = filePath.toString().replace("tagged",
+						pathKeyword);
+				File file = new File(filePathString);
+				file.getParentFile().mkdirs();
+				file.createNewFile();
 
-			FileWriter fw = new FileWriter(file.getAbsoluteFile());
-			BufferedWriter bw = new BufferedWriter(fw);
-			bw.write(hmap.toString());
-			bw.close();
-
-			/*
-			 * FileOutputStream fos = new FileOutputStream(filePathString);
-			 * ObjectOutputStream oos = new ObjectOutputStream(fos);
-			 * oos.writeObject(hmap); oos.close(); fos.close();
-			 */
+				FileWriter fw = new FileWriter(file.getAbsoluteFile());
+				BufferedWriter bw = new BufferedWriter(fw);
+				bw.write(hmap.toString());
+				bw.close();
+			}
+			if(serializeDataFlag){
+				String serializationFilePath = filePath.toString().replace("tagged",
+						"ser");
+				File serFile = new File(serializationFilePath);
+				serFile.getParentFile().mkdirs();
+				serFile.createNewFile();
+				FileOutputStream fileOut = new FileOutputStream(
+						serializationFilePath);
+				ObjectOutputStream out = new ObjectOutputStream(fileOut);
+				out.writeObject(hmap);
+				out.close();
+				fileOut.close();
+			}
+			
 		} catch (Exception e) {
 			log.info(e.getStackTrace());
 			// TODO add proper exception
@@ -296,6 +319,41 @@ public class StopWordServiceImpl implements StopWordService {
 		}
 
 		return lemma;
+	}
+	public void calculateTFIDFForAllDocuments(List<Path> filePaths,Map<String,CorpusValue> globalCorpa){
+		
+		for(Path filePath:filePaths){
+			Map<String,CorpusValue> keywords=deserializeObject(filePath);
+			tfidfService.calculateTFIDF(keywords, globalCorpa);
+			writeListToFile(keywords, filePath, "weightage", true, false);
+			//tfidfService.calculateTFIDF(Map<String, CorpusValue>)
+		}
+	}
+	
+	public Map<String,CorpusValue> deserializeObject(Path filePath){
+		
+		Map<String,CorpusValue> keywords=null;
+		try
+	      {
+			String filePathString = filePath.toString().replace("tagged",
+					"ser");
+	         FileInputStream fileIn = new FileInputStream(filePathString);
+			//InputStream fileIn =Files.newInputStream(filePath);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         keywords=(HashMap<String,CorpusValue>) in.readObject();
+	         in.close();
+	         fileIn.close();
+	      }catch(IOException i)
+	      {
+	         i.printStackTrace();
+	        // return keywords
+	      }catch(ClassNotFoundException c)
+	      {
+	        log.info("Employee class not found");
+	        //log.info(c.printStackTrace());
+	         //return;
+	      }
+		 return keywords;
 	}
 }
 

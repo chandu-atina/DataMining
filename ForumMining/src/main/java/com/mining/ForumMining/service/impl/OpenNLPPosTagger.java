@@ -81,20 +81,36 @@ public class OpenNLPPosTagger implements PoSTagger {
 		Path path = Paths.get(appProp.getMailLocation());
 		List<Path> files = new ArrayList<Path>();
 		listFiles(path, files);
+		InputStream modelIn = null;
+		try{
+		modelIn = new FileInputStream(
+				"data/openNLPModels/en-pos-maxent.bin");
+		POSModel model = new POSModel(modelIn);
+		POSTaggerME tagger = new POSTaggerME(model);
 
 		for (Path filePath : files) {
 			try {
-				tagFile(filePath);
+				tagFile(filePath,tagger);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+		}
+		}catch(IOException e){
+			throw new ClusterServiceException(e);
+		}finally {
+			if (modelIn != null) {
+				try {
+					modelIn.close();
+				} catch (IOException e) {
+				}
 			}
 		}
 		return true;
 	}
 
 	@SuppressWarnings("deprecation")
-	public boolean tagFile(Path filePath) throws IOException {
+	public boolean tagFile(Path filePath,POSTaggerME tagger) throws IOException {
 		BufferedReader reader = Files.newBufferedReader(filePath,
 				StandardCharsets.UTF_8);
 		StringBuilder content = new StringBuilder();
@@ -103,12 +119,9 @@ public class OpenNLPPosTagger implements PoSTagger {
 			content.append(line);
 		}
 		// System.out.println("Content: " + content.toString());
-		InputStream modelIn = null;
+		
 		try {
-			modelIn = new FileInputStream(
-					"data/openNLPModels/en-pos-maxent.bin");
-			POSModel model = new POSModel(modelIn);
-			POSTaggerME tagger = new POSTaggerME(model);
+			
 			String taggedContent = tagger.tag(content.toString());
 			log.info(taggedContent);
 
@@ -126,14 +139,7 @@ public class OpenNLPPosTagger implements PoSTagger {
 		} catch (IOException e) {
 			// Model loading failed, handle the error
 			e.printStackTrace();
-		} finally {
-			if (modelIn != null) {
-				try {
-					modelIn.close();
-				} catch (IOException e) {
-				}
-			}
-		}
+		} 
 		return true;
 	}
 

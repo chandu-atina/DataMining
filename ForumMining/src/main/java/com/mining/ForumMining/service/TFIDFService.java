@@ -7,10 +7,18 @@ import com.mining.ForumMining.exception.ClusterServiceException;
 
 public interface TFIDFService {
 
-	public void TFCalculation(Map<String,CorpusValue> keyValueMap) throws ClusterServiceException;
-	
-	public void IDFCalculation(Map<String,CorpusValue> keyValueMap) throws ClusterServiceException;
-	
-	public void TFIDFCalculation(Map<String,CorpusValue> keyValueMap) throws ClusterServiceException;
-	
+	public void calculateTF(Map<String, CorpusValue> keyValueMap)
+			throws ClusterServiceException;
+
+	public void calculateIDF(Map<String, CorpusValue> keyValueMap)
+			throws ClusterServiceException;
+
+	public void calculateTFIDF(Map<String, CorpusValue> keyValueMap,
+			Map<String, CorpusValue> globalCorpa)
+			throws ClusterServiceException;
+
+	public void calculateDFT(Map<String, CorpusValue> keyValueMap,
+			Map<String, CorpusValue> globalCorpa)
+			throws ClusterServiceException;
+
 }

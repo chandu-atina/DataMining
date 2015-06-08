@@ -10,19 +10,19 @@ public class CorpusValue implements Comparable<CorpusValue>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	int value = 1; // no.of times term appears in current document
+	private int value = 1; // no.of times term appears in current document
 	
-	float tf;
+	private double tf;
 	
-	float idf;
+	private double idf;
 	
-	float tfidf;
+	private double tfidf;
 	
-	int dft; //the number of documents in which term appears
+	private int dft; //the number of documents in which term appears
 	
-	int totalDocCount; //Total no.of docuemnts count
+	private int totalDocCount; //Total no.of docuemnts count
 	
-	int totalWordCount; //Total no.of words in current document
+	private int totalWordCount; //Total no.of words in current document
 
 	
 	public CorpusValue() {
@@ -33,6 +33,7 @@ public class CorpusValue implements Comparable<CorpusValue>, Serializable {
 	public CorpusValue(int totalDocCount) {
 		super();
 		this.totalDocCount = totalDocCount;
+		this.dft=1;
 	}
 
 	public void increment() {
@@ -58,6 +59,9 @@ public class CorpusValue implements Comparable<CorpusValue>, Serializable {
 		if(tfidf!=0){
 			corpusValue.append(" tfidf:"+tfidf);
 		}
+		if(totalDocCount !=0){
+			corpusValue.append(" total_Doc_Count:"+totalDocCount);
+		}
 		corpusValue.append(" ]");
 		return corpusValue.toString();
 	}
@@ -71,27 +75,27 @@ public class CorpusValue implements Comparable<CorpusValue>, Serializable {
 			return -1;
 	}
 	
-	public float getTf() {
+	public double getTf() {
 		return tf;
 	}
 
-	public void setTf(float tf) {
+	public void setTf(double tf) {
 		this.tf = tf;
 	}
 
-	public float getIdf() {
+	public double getIdf() {
 		return idf;
 	}
 
-	public void setIdf(float idf) {
+	public void setIdf(double idf) {
 		this.idf = idf;
 	}
 
-	public float getTfidf() {
+	public double getTfidf() {
 		return tfidf;
 	}
 
-	public void setTfidf(float tfidf) {
+	public void setTfidf(double tfidf) {
 		this.tfidf = tfidf;
 	}
 
@@ -118,5 +122,7 @@ public class CorpusValue implements Comparable<CorpusValue>, Serializable {
 	public void setTotalWordCount(int totalWordCount) {
 		this.totalWordCount = totalWordCount;
 	}
-	
+	public void incrementDFT(){
+		this.dft++;
+	}
 }
