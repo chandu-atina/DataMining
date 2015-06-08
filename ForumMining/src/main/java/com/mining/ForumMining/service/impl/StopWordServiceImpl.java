@@ -33,8 +33,10 @@ import org.tartarus.snowball.ext.PorterStemmer;
 
 import com.crawl.web.util.ApplicationProperties;
 import com.mining.ForumMining.constants.MiningConstants;
+import com.mining.ForumMining.core.CorpusValue;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.StopWordService;
+import com.mining.ForumMining.service.TFIDFService;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
@@ -52,6 +54,9 @@ public class StopWordServiceImpl implements StopWordService {
 
 	@Autowired
 	ApplicationProperties appProp;
+	
+	@Autowired
+	TFIDFService tfidfService;
 
 	PorterStemmer stem = new PorterStemmer();
 
@@ -60,6 +65,7 @@ public class StopWordServiceImpl implements StopWordService {
 		Path path = Paths.get(appProp.getMailLocation());
 		List<Path> files = new ArrayList<Path>();
 		listFiles(path, files);
+		Map<String,CorpusValue> globalCorpus=new HashMap<String, CorpusValue>();
 		
 		Properties props = new Properties();
 		props.put("annotators", "tokenize, ssplit, pos, lemma");
@@ -67,12 +73,37 @@ public class StopWordServiceImpl implements StopWordService {
 		
 		for (Path filePath : files) {
 			try {
-				removeStopWordfromFile(filePath,pipeline);
+				removeStopWordfromFile(globalCorpus,filePath,pipeline,files.size());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		
+		
+		log.info("\n\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n\n");
+		
+		globalCorpus = sortByValue(globalCorpus);
+		//log.info(globalCorpus);
+		log.info(globalCorpus.size());
+		Set<String> keySet = globalCorpus.keySet();
+
+		List<String> words=new ArrayList<String>();
+		try {
+			words = FileUtils.readLines(new File(
+					"data/stop_word/stopwords_lemmatized"), "utf-8");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		keySet.removeAll(new HashSet<String>(words));
+		log.info(globalCorpus.size());
+		//log.info(globalCorpus);
+		//writeListToFile(globalCorpus, filePath,"stopword");
+		//tfidfService.TFCalculation(globalCorpus);
+		//log.info(globalCorpus);
+		writeListToFile(globalCorpus, files.get(0),"globalcorpa");
+		
 	}
 
 	public void removeStopWords(String docLocation)
@@ -109,10 +140,10 @@ public class StopWordServiceImpl implements StopWordService {
 		}
 	}
 
-	public void removeStopWordfromFile(Path filePath,StanfordCoreNLP pipeLine) throws IOException {
+	public void removeStopWordfromFile(Map<String,CorpusValue> globalCorpus, Path filePath,StanfordCoreNLP pipeLine,Integer docCount) throws IOException {
 		BufferedReader reader = Files.newBufferedReader(filePath,
 				StandardCharsets.UTF_8);
-		Map<String, MutableInt> keyWords = new HashMap<String, MutableInt>();
+		Map<String, CorpusValue> keyWords = new HashMap<String, CorpusValue>();
 		StringBuilder content = new StringBuilder();
 		String line = null;
 		while ((line = reader.readLine()) != null) {
@@ -137,12 +168,22 @@ public class StopWordServiceImpl implements StopWordService {
 					.contains(s.substring(s.indexOf("/") + 1))) {
 				String stemmedWord = getStemmedWord(s.substring(0,
 						s.indexOf("/")).toLowerCase(),pipeLine);
-				MutableInt count = keyWords.get(stemmedWord);
+				/* Current Document Corpus */
+				CorpusValue count = keyWords.get(stemmedWord);
 				if (count == null) {
-					keyWords.put(stemmedWord, new MutableInt());
+					keyWords.put(stemmedWord, new CorpusValue(docCount));
 				} else {
 					count.increment();
 				}
+				
+				/* Global Corpus */
+				CorpusValue globalcount = globalCorpus.get(stemmedWord);
+				if (globalcount == null) {
+					globalCorpus.put(stemmedWord, new CorpusValue(docCount));
+				} else {
+					globalcount.increment();
+				}
+				
 			}
 		}
 		keyWords = sortByValue(keyWords);
@@ -155,8 +196,11 @@ public class StopWordServiceImpl implements StopWordService {
 		keySet.removeAll(new HashSet<String>(words));
 		log.info(keyWords.size());
 		log.info(keyWords);
-
-		writeListToFile(keyWords, filePath);
+		writeListToFile(keyWords, filePath,"stopword");
+		tfidfService.TFCalculation(keyWords);
+		log.info(keyWords);
+		writeListToFile(keyWords, filePath,"weightage");
+		
 		// log.info(keyWords);
 	}
 
@@ -165,6 +209,7 @@ public class StopWordServiceImpl implements StopWordService {
 		StopWordServiceImpl sample = new StopWordServiceImpl();
 		Path path = Paths.get("/var/tmp/mail");
 		List<Path> files = new ArrayList<Path>();
+		Map<String,CorpusValue> globalCorpus =new HashMap<String, CorpusValue>();
 		sample.listFiles(path, files);
 		Properties props = new Properties();
 		props.put("annotators", "tokenize, ssplit, pos, lemma");
@@ -172,7 +217,7 @@ public class StopWordServiceImpl implements StopWordService {
 
 		for (Path filePath : files) {
 			try {
-				sample.removeStopWordfromFile(filePath,pipeline);
+				sample.removeStopWordfromFile(globalCorpus,filePath,pipeline,files.size());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -181,8 +226,8 @@ public class StopWordServiceImpl implements StopWordService {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	static Map<String, MutableInt> sortByValue(Map<String, MutableInt> map) {
-		List<Map<String, MutableInt>> list = new LinkedList(map.entrySet());
+	static Map<String, CorpusValue> sortByValue(Map<String, CorpusValue> map) {
+		List<Map<String, CorpusValue>> list = new LinkedList(map.entrySet());
 		Collections.sort(list, new Comparator() {
 			public int compare(Object o1, Object o2) {
 				return ((Comparable) ((Map.Entry) (o1)).getValue())
@@ -190,15 +235,15 @@ public class StopWordServiceImpl implements StopWordService {
 			}
 		});
 
-		Map<String, MutableInt> result = new LinkedHashMap<String, MutableInt>();
+		Map<String, CorpusValue> result = new LinkedHashMap<String, CorpusValue>();
 		for (Iterator it = list.iterator(); it.hasNext();) {
 			Map.Entry entry = (Map.Entry) it.next();
-			result.put((String) entry.getKey(), (MutableInt) entry.getValue());
+			result.put((String) entry.getKey(), (CorpusValue) entry.getValue());
 		}
 		return result;
 	}
 
-	public boolean writeListToFile(Map hmap, Path filePath) {
+	public boolean writeListToFile(Map hmap, Path filePath,String pathKeyword) {
 
 		/*
 		 * filePath :
@@ -206,7 +251,7 @@ public class StopWordServiceImpl implements StopWordService {
 		 */
 
 		String filePathString = filePath.toString().replace("tagged",
-				"stopword");
+				pathKeyword);
 
 		try {
 			File file = new File(filePathString);
@@ -254,30 +299,4 @@ public class StopWordServiceImpl implements StopWordService {
 	}
 }
 
-class MutableInt implements Comparable<MutableInt>, Serializable {
 
-	private static final long serialVersionUID = 1L;
-
-	int value = 1; // note that we start at 1 since we're counting
-
-	public void increment() {
-		++value;
-	}
-
-	public int get() {
-		return value;
-	}
-
-	public String toString() {
-		return String.valueOf(value);
-	}
-
-	public int compareTo(MutableInt o) {
-		if (o.get() > this.get())
-			return 1;
-		else if (o.get() == this.get())
-			return 0;
-		else
-			return -1;
-	}
-}
