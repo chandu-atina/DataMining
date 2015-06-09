@@ -17,14 +17,31 @@ This project has various phases which involves the sequence of steps.
 4) Stop-Word Removal
   >> Stop-Word removal includes removal of unmeaning full words, common words etc
 
-5) Stemming
+5) Stemming & Lemmatization
   >> Stemming includes removal of similar words and base line them to a single meaningful word.
-     For e.g. running, ran, run can be stemmed to single word "run".
+     For e.g. running,run can be stemmed to single word "run".
+  >> Lemmatisation (or lemmatization) is the process of grouping together the different inflected forms of a word so        they can be analysed as a single item includes removal of similar words and base line them to a single meaningful      word.
+     For e.g. running, ran, run can be lemmatized to single word "run".
 
 6) Pruning
   >> Low frequency words are removed from word list.
-
-7) Clustering
+  
+7) Weighting
+  >> Weightage is given to each and every term inside the document by calculating "tfidf". It is the product of term        frequency and inverse document frequency.
+      tf idft = tf · (log 2 n − log 2 dft + 1)
+      
+      tf  - term frequency
+      dft - the number of documents in which term 't' appears
+      n   - no.of documents
+      
+8) Cosine Similarity
+  >> COsine distnace between two document vectors
+      s(d i , d j ) = cos( ( d i , d j )) =   di·dj
+                                          ________________      
+                                             |di|·|dj|
+    Cosine Similarity(Doc1,Doc2) = Dot product(Doc1,Doc2) / ||Doc1||*||Doc2||
+  
+9) Clustering
   >> Apply clustering algorithm to form Clusters.
   
 Note
