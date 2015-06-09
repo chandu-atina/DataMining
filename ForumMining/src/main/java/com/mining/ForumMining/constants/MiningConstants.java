@@ -44,6 +44,10 @@ import java.util.List;
 public class MiningConstants {
 
 	public static List<String> POSTAG_LIST = new ArrayList<String>();
+	
+	public static Integer TERM_THRESHOLD_COUNT=100;
+	
+	public static Double COSINE_SIMILARITY_THRESHOLD=0.5;
 
 	static {
 		POSTAG_LIST.add("JJ");   //Adjective

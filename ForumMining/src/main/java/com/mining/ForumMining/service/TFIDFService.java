@@ -13,11 +13,15 @@ public interface TFIDFService {
 	public void calculateIDF(Map<String, CorpusValue> keyValueMap)
 			throws ClusterServiceException;
 
-	public void calculateTFIDF(Map<String, CorpusValue> keyValueMap,
+	public Map<String,Double> calculateTFIDF(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
 			throws ClusterServiceException;
 
 	public void calculateDFT(Map<String, CorpusValue> keyValueMap,
+			Map<String, CorpusValue> globalCorpa)
+			throws ClusterServiceException;
+	
+	public void calculateDocumentVector(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
 			throws ClusterServiceException;
 

@@ -193,6 +193,7 @@ public class StopWordServiceImpl implements StopWordService {
 					globalcount.increment();
 					if(!isCurrentDocCounted){
 						globalcount.incrementDFT();
+						isCurrentDocCounted=true;
 						//if(count !=null)
 						//	count.setTf(globalcount.getTf());
 					}
@@ -279,7 +280,7 @@ public class StopWordServiceImpl implements StopWordService {
 			}
 			if(serializeDataFlag){
 				String serializationFilePath = filePath.toString().replace("tagged",
-						"ser");
+						pathKeyword+"_ser");
 				File serFile = new File(serializationFilePath);
 				serFile.getParentFile().mkdirs();
 				serFile.createNewFile();
@@ -324,9 +325,10 @@ public class StopWordServiceImpl implements StopWordService {
 		
 		for(Path filePath:filePaths){
 			Map<String,CorpusValue> keywords=deserializeObject(filePath);
-			tfidfService.calculateTFIDF(keywords, globalCorpa);
+			Map<String,Double> docVector=tfidfService.calculateTFIDF(keywords, globalCorpa);
 			writeListToFile(keywords, filePath, "weightage", true, false);
-			//tfidfService.calculateTFIDF(Map<String, CorpusValue>)
+			writeListToFile(docVector, filePath, "vector", true, false);
+			//tfidfService.calculateDocumentVector(keywords,globalCorpa);
 		}
 	}
 	
