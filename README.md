@@ -37,7 +37,9 @@ This project has various phases which involves the sequence of steps.
 8) Cosine Similarity
   >> COsine distnace between two document vectors
       s(d i , d j ) = cos( ( d i , d j )) =   di·dj
+                                          
                                           ________________      
+                                          
                                              |di|·|dj|
     Cosine Similarity(Doc1,Doc2) = Dot product(Doc1,Doc2) / ||Doc1||*||Doc2||
   
