@@ -48,6 +48,8 @@ public class MiningConstants {
 	public static Integer TERM_THRESHOLD_COUNT=100;
 	
 	public static Double COSINE_SIMILARITY_THRESHOLD=0.5;
+	
+	public static Integer MAX_DOC_PER_THREAD=50;
 
 	static {
 		POSTAG_LIST.add("JJ");   //Adjective
