@@ -385,17 +385,26 @@ public class StopWordServiceImpl implements StopWordService {
 			throws ClusterServiceException {
 		log.info("Staring calculation of cosine similarity matrix !!!");
 		long startTime = Calendar.getInstance().getTimeInMillis();
-
+		List<Integer> threadLoadBalance = new ArrayList<Integer>();
+		int operationsPerThread = filePaths.size() * filePaths.size() / 20;
 		Double[][] cosineMatrix = new Double[filePaths.size()][filePaths.size()];
 		/* Creating and executor instance */
 		ExecutorService es = Executors.newCachedThreadPool();
 		try {
-			for (int counter = 0; counter < filePaths.size(); counter += MiningConstants.MAX_DOC_PER_THREAD) {
+			for (int i = MiningConstants.MAX_THREAD_COUNT; i >= 1; i--) {
+				threadLoadBalance.add((int) Math.round(Math
+						.sqrt(operationsPerThread * 2 * i)
+						- Math.sqrt(operationsPerThread * 2 * (i - 1))));
+			}
+			int prevEnd = -1;
+			for (int i = 0; i < MiningConstants.MAX_THREAD_COUNT; i++) {
+
 				// cosineMatrix=es.submit(new
 				// CosineCalculationThread(cosineMatrix,
 				// filePaths,counter)).get();
 				es.execute(new CosineCalculationThread(cosineMatrix, filePaths,
-						counter));
+						prevEnd + 1, prevEnd + threadLoadBalance.get(i)));
+				prevEnd += threadLoadBalance.get(i);
 			}
 
 			es.shutdown();
@@ -426,20 +435,23 @@ public class StopWordServiceImpl implements StopWordService {
 
 		private Double[][] cosineMatrix;
 		private List<Path> filePaths;
-		private Integer counter;
+		private Integer startIndex;
+		private Integer endIndex;
 
 		public CosineCalculationThread(Double[][] cosineMatrix,
-				List<Path> filePaths, Integer counter) {
+				List<Path> filePaths, Integer startIndex, Integer endIndex) {
 			super();
 			this.cosineMatrix = cosineMatrix;
 			this.filePaths = filePaths;
-			this.counter = counter;
+			this.startIndex = startIndex;
+			this.endIndex = endIndex;
 		}
 
 		public void run() {
 			try {
 				log.info(Thread.currentThread().getName() + " Started");
-				calculateCosineSimilarity(counter, cosineMatrix, filePaths);
+				calculateCosineSimilarity(startIndex, endIndex, cosineMatrix,
+						filePaths);
 				log.info(Thread.currentThread().getName() + " finished its job");
 			} catch (Exception e) {
 				throw new ClusterServiceException(new ErrorMessage(
@@ -450,7 +462,8 @@ public class StopWordServiceImpl implements StopWordService {
 		public Double[][] call() throws Exception {
 			// TODO Auto-generated method stub
 			try {
-				calculateCosineSimilarity(counter, cosineMatrix, filePaths);
+				calculateCosineSimilarity(startIndex, endIndex, cosineMatrix,
+						filePaths);
 				return cosineMatrix;
 
 			} catch (Exception e) {
@@ -462,10 +475,10 @@ public class StopWordServiceImpl implements StopWordService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void calculateCosineSimilarity(Integer counter,
+	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
 			Double[][] cosineMatrix, List<Path> filePaths)
 			throws ClusterServiceException {
-		for (int i = counter; i < counter + MiningConstants.MAX_DOC_PER_THREAD && i < filePaths.size(); i++) {
+		for (int i = startIndex; i <= endIndex && i < filePaths.size(); i++) {
 			Path filePath1 = filePaths.get(i);
 			Map<String, Double> docVector1 = (LinkedHashMap<String, Double>) deserializeObject(
 					filePath1, "vector");
@@ -476,10 +489,11 @@ public class StopWordServiceImpl implements StopWordService {
 				Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) deserializeObject(
 						filePath2, "vector");
 				List<Double> list2 = new ArrayList<Double>(docVector2.values());
-				// cosineMatrix[i][j]=cosineService.getCosineSimilarity(list1,list2);
+				cosineMatrix[i][j] = cosineService.getCosineSimilarity(list1,
+						list2);
 				// TODO remove new initialization after test
-				cosineMatrix[i][j] = new CosineSimilarityImpl()
-						.getCosineSimilarity(list1, list2);
+				// cosineMatrix[i][j] = new CosineSimilarityImpl()
+				// .getCosineSimilarity(list1, list2);
 			}
 		}
 	}
