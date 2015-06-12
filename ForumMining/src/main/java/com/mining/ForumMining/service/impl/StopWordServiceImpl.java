@@ -71,6 +71,8 @@ public class StopWordServiceImpl implements StopWordService {
 	CosineService cosineService;
 
 	PorterStemmer stem = new PorterStemmer();
+	
+	List<Map<String,Double>> tfidfVectorList = new ArrayList<Map<String,Double>>();
 
 	public void removeStopWords() throws ClusterServiceException {
 
@@ -344,8 +346,9 @@ public class StopWordServiceImpl implements StopWordService {
 					filePath, "weightage");
 			Map<String, Double> docVector = tfidfService.calculateTFIDF(
 					keywords, globalCorpa);
+			tfidfVectorList.add(docVector);
 			writeListToFile(keywords, filePath, "weightage", true, true);
-			writeListToFile(docVector, filePath, "vector", true, true);
+			//writeListToFile(docVector, filePath, "vector", true, true);
 			// tfidfService.calculateDocumentVector(keywords,globalCorpa);
 
 		}
@@ -386,8 +389,11 @@ public class StopWordServiceImpl implements StopWordService {
 		log.info("Staring calculation of cosine similarity matrix !!!");
 		long startTime = Calendar.getInstance().getTimeInMillis();
 		List<Integer> threadLoadBalance = new ArrayList<Integer>();
-		int operationsPerThread = filePaths.size() * filePaths.size() / 20;
-		Double[][] cosineMatrix = new Double[filePaths.size()][filePaths.size()];
+		
+		//int operationsPerThread = filePaths.size() * filePaths.size() / 20;
+		int operationsPerThread = tfidfVectorList.size() * tfidfVectorList.size() / 20;
+		
+		Double[][] cosineMatrix = new Double[tfidfVectorList.size()][tfidfVectorList.size()];
 		/* Creating and executor instance */
 		ExecutorService es = Executors.newCachedThreadPool();
 		try {
@@ -474,20 +480,25 @@ public class StopWordServiceImpl implements StopWordService {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
 			Double[][] cosineMatrix, List<Path> filePaths)
 			throws ClusterServiceException {
 		for (int i = startIndex; i <= endIndex && i < filePaths.size(); i++) {
-			Path filePath1 = filePaths.get(i);
-			Map<String, Double> docVector1 = (LinkedHashMap<String, Double>) deserializeObject(
-					filePath1, "vector");
+			
+			//Path filePath1 = filePaths.get(i);
+			//Map<String, Double> docVector1 = (LinkedHashMap<String, Double>) deserializeObject(
+			//		filePath1, "vector");
+			Map<String, Double> docVector1 = (LinkedHashMap<String, Double>) tfidfVectorList.get(i);	
+					
 			List<Double> list1 = new ArrayList<Double>(docVector1.values());
 
 			for (int j = i + 1; j < filePaths.size(); j++) {
-				Path filePath2 = filePaths.get(j);
-				Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) deserializeObject(
-						filePath2, "vector");
+				
+				//Path filePath2 = filePaths.get(j);
+				//Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) deserializeObject(
+				//		filePath2, "vector");
+				Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) tfidfVectorList.get(j);
+				
 				List<Double> list2 = new ArrayList<Double>(docVector2.values());
 				cosineMatrix[i][j] = cosineService.getCosineSimilarity(list1,
 						list2);
