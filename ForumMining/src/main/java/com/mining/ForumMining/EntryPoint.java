@@ -9,8 +9,18 @@ package com.mining.ForumMining;
  *  28/05/2015		29/05/2015		chandu-atina 	Initial basic version
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,9 +30,12 @@ import org.springframework.stereotype.Component;
 
 import com.crawl.web.exception.WebCrawlerServiceException;
 import com.crawl.web.service.CrawlerService;
+import com.mining.ForumMining.core.CorpusValue;
 import com.mining.ForumMining.exception.ClusterServiceException;
+import com.mining.ForumMining.service.CosineService;
 import com.mining.ForumMining.service.PoSTagger;
 import com.mining.ForumMining.service.StopWordService;
+import com.mining.ForumMining.service.TFIDFService;
 
 /**
  * EntryPoint is a entry point for clustering of forum data This is a main class
@@ -44,7 +57,15 @@ public class EntryPoint {
 	CrawlerService webCrawler;
 
 	@Autowired
+	@Qualifier("StopWordNewServiceImpl")
 	StopWordService stopWordService;
+	
+
+	@Autowired
+	TFIDFService tfidfService;
+	
+	@Autowired
+	CosineService cosineService;
 	/**
 	 * main method is the starting point of clustering
 	 */
@@ -76,15 +97,41 @@ public class EntryPoint {
 	}
 
 	public boolean cluster() {
+		Map<String, CorpusValue> globalCorpus = new HashMap<String, CorpusValue>();
+		List<Map<String,Double>> tfidfVectorList = new ArrayList<Map<String,Double>>();
 
 		/* Crawls data from maven forum */
-		webCrawler.processRequest(true);
+		//webCrawler.processRequest(true);
 
 		/* Applies PosTagging for the data */
 		//posTagger.tagDocuments();
 		
 		/* Removes stop words, stemming and lemmatization */
-		stopWordService.removeStopWords();
+		List<Map<String,CorpusValue>> docList = stopWordService.removeStopWords(globalCorpus);
+		
+		globalCorpus = stopWordService.sortByValue(globalCorpus);
+
+		log.info(globalCorpus.size());
+		Set<String> keySet = globalCorpus.keySet();
+
+		List<String> words = new ArrayList<String>();
+		try {
+			words = FileUtils.readLines(new File(
+					"data/stop_word/stopwords_lemmatized"), "utf-8");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		keySet.removeAll(new HashSet<String>(words));
+		log.info(globalCorpus.size());
+		
+		for (Map<String,CorpusValue> doc : docList) {
+			Map<String, Double> docVector =tfidfService.calculateTFIDF(
+				doc, globalCorpus);
+		tfidfVectorList.add(docVector);
+		}
+		cosineService.calculateCosineSimilarityMatrix(tfidfVectorList);
 		return true;
 	}
 }
