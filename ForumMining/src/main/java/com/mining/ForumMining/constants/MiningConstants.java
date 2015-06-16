@@ -1,5 +1,13 @@
 package com.mining.ForumMining.constants;
 
+/*
+ * ##############################$History Card$###################################
+ * ### Latest changes description should be on the top of the history card list###
+ * ###############################################################################
+ *  Created Date	Updated Date	Author			Change Description
+ *  ============	============	============	===================
+ *  28/05/2015		29/05/2015		chandu-atina 	Initial basic version
+ */
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +48,10 @@ import java.util.List;
  * WP Wh­pronoun
  * WP$ Possessive wh­pronoun
  * WRB Wh­adverb
+ */
+/**
+ * Mining constants class holds the set of constants used across the clustering process.
+ *
  */
 public class MiningConstants {
 

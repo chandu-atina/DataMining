@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import com.crawl.web.exception.WebCrawlerServiceException;
 import com.crawl.web.service.CrawlerService;
+import com.crawl.web.util.messages.ErrorMessage;
 import com.mining.ForumMining.core.CorpusValue;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.CosineService;
@@ -66,6 +66,7 @@ public class EntryPoint {
 	
 	@Autowired
 	CosineService cosineService;
+	
 	/**
 	 * main method is the starting point of clustering
 	 */
@@ -98,40 +99,58 @@ public class EntryPoint {
 
 	public boolean cluster() {
 		Map<String, CorpusValue> globalCorpus = new HashMap<String, CorpusValue>();
-		List<Map<String,Double>> tfidfVectorList = new ArrayList<Map<String,Double>>();
+		List<Map<String, Double>> tfidfVectorList = new ArrayList<Map<String, Double>>();
 
-		/* Crawls data from maven forum */
-		//webCrawler.processRequest(true);
-
-		/* Applies PosTagging for the data */
-		//posTagger.tagDocuments();
-		
-		/* Removes stop words, stemming and lemmatization */
-		List<Map<String,CorpusValue>> docList = stopWordService.removeStopWords(globalCorpus);
-		
-		globalCorpus = stopWordService.sortByValue(globalCorpus);
-
-		log.info(globalCorpus.size());
-		Set<String> keySet = globalCorpus.keySet();
-
-		List<String> words = new ArrayList<String>();
 		try {
+			/* Crawls data from maven forum */
+			webCrawler.processRequest(true);
+
+			/* Applies PosTagging for the data */
+			// posTagger.tagDocuments();
+
+			/* Removes stop words, stemming and lemmatization */
+			List<Map<String, CorpusValue>> docList = stopWordService
+					.removeStopWords(globalCorpus);
+
+			globalCorpus = stopWordService.sortByValue(globalCorpus);
+			log.info(globalCorpus.size());
+			Set<String> keySet = globalCorpus.keySet();
+
+			List<String> words = new ArrayList<String>();
 			words = FileUtils.readLines(new File(
 					"data/stop_word/stopwords_lemmatized"), "utf-8");
+
+			keySet.removeAll(new HashSet<String>(words));
+			log.info(globalCorpus.size());
+			
+			/*
+			 * Calculate tfidf value for each and every document
+			 */
+			for (Map<String, CorpusValue> doc : docList) {
+				Map<String, Double> docVector = tfidfService.calculateTFIDF(
+						doc, globalCorpus);
+				tfidfVectorList.add(docVector);
+			}
+			
+			/*
+			 * Calcualte cosine similarity matrix from the document vectors
+			 */
+			cosineService.calculateCosineSimilarityMatrix(tfidfVectorList);
+			
+			/*
+			 * Applying Clustering on cosine similarity matrix
+			 */
+			//TODO: CLustering of documents based on cosine similarity matrix
+			
+			/*
+			 * Labelling of clusters
+			 */
+			//TODO: Applying labels to clusters based on the keywords in the document vectors
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ClusterServiceException(new ErrorMessage(e.getMessage(),
+					e.getCause()));
 		}
-		
-		keySet.removeAll(new HashSet<String>(words));
-		log.info(globalCorpus.size());
-		
-		for (Map<String,CorpusValue> doc : docList) {
-			Map<String, Double> docVector =tfidfService.calculateTFIDF(
-				doc, globalCorpus);
-		tfidfVectorList.add(docVector);
-		}
-		cosineService.calculateCosineSimilarityMatrix(tfidfVectorList);
 		return true;
 	}
 }
