@@ -63,9 +63,9 @@ import edu.stanford.nlp.util.CoreMap;
  * 
  * @author chandrasekhara
  *
- * StopWordService class is a service layer implementing StopWordService
- *  Interface.It exposes services 
- * to remove stop words from the list of documents.
+ *         StopWordService class is a service layer implementing StopWordService
+ *         Interface.It exposes services to remove stop words from the list of
+ *         documents.
  * 
  */
 @Service("StopWordNewServiceImpl")
@@ -83,19 +83,20 @@ public class StopWordNewServiceImpl implements StopWordService {
 	CosineService cosineService;
 
 	PorterStemmer stem = new PorterStemmer();
-	
-	List<Map<String,Double>> tfidfVectorList = new ArrayList<Map<String,Double>>();
+
+	List<Map<String, Double>> tfidfVectorList = new ArrayList<Map<String, Double>>();
 
 	/**
-	 * Implements removeStopWords method define in 
-	 * StopWordService Interface.
+	 * Implements removeStopWords method define in StopWordService Interface.
 	 */
-	public List<Map<String, CorpusValue>> removeStopWords(Map<String, CorpusValue> globalCorpus) throws ClusterServiceException {
+	public List<Map<String, CorpusValue>> removeStopWords(
+			Map<String, CorpusValue> globalCorpus)
+			throws ClusterServiceException {
 
 		Path path = Paths.get(appProp.getMailLocation());
 		List<Path> files = new ArrayList<Path>();
 		listFiles(path, files);
-		List<Map<String, CorpusValue>> docList= new ArrayList<Map<String,CorpusValue>>();
+		List<Map<String, CorpusValue>> docList = new ArrayList<Map<String, CorpusValue>>();
 
 		Properties props = new Properties();
 		props.put("annotators", "tokenize, ssplit, pos, lemma");
@@ -106,11 +107,12 @@ public class StopWordNewServiceImpl implements StopWordService {
 		 */
 		for (Path filePath : files) {
 			try {
-				docList.add(removeStopWordfromFile(globalCorpus, filePath, pipeline,
-						files.size()));
+				docList.add(removeStopWordfromFile(globalCorpus, filePath,
+						pipeline, files.size()));
 			} catch (IOException e) {
 				throw new ClusterServiceException(new ErrorMessage(
-						"Exception while processing file at : "+filePath, e.getCause()));
+						"Exception while processing file at : " + filePath,
+						e.getCause()));
 			}
 		}
 		log.info("\n\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n\n");
@@ -118,10 +120,10 @@ public class StopWordNewServiceImpl implements StopWordService {
 	}
 
 	/**
-	 * Implements removeStopWords method define in 
-	 * StopWordService Interface.
+	 * Implements removeStopWords method define in StopWordService Interface.
 	 */
-	public void removeStopWords(String docLocation,Map<String, CorpusValue> globalCorpus)
+	public void removeStopWords(String docLocation,
+			Map<String, CorpusValue> globalCorpus)
 			throws ClusterServiceException {
 
 		appProp.setMailLocation(docLocation);
@@ -138,7 +140,8 @@ public class StopWordNewServiceImpl implements StopWordService {
 
 	/**
 	 * 
-	 * @param appProp - sets appProp through Auto wiring
+	 * @param appProp
+	 *            - sets appProp through Auto wiring
 	 */
 	public void setAppProp(ApplicationProperties appProp) {
 		this.appProp = appProp;
@@ -146,15 +149,17 @@ public class StopWordNewServiceImpl implements StopWordService {
 
 	/**
 	 * 
-	 * @param path - File System Path
-	 * @param files - Stores all file name in the input path
+	 * @param path
+	 *            - File System Path
+	 * @param files
+	 *            - Stores all file name in the input path
 	 */
 	public void listFiles(Path path, List<Path> files) {
 		try {
 			DirectoryStream<Path> stream = Files.newDirectoryStream(path);
 			/*
-			 * recursively checks for directories and lists all files
-			 * In-Order Tree Traversal
+			 * recursively checks for directories and lists all files In-Order
+			 * Tree Traversal
 			 */
 			for (Path entry : stream) {
 				if (Files.isDirectory(entry)) {
@@ -168,33 +173,38 @@ public class StopWordNewServiceImpl implements StopWordService {
 			stream.close();
 		} catch (IOException e) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception while listing files at : "+path, e.getCause()));
+					"Exception while listing files at : " + path, e.getCause()));
 		}
 	}
 
 	/**
 	 * 
-	 * @param globalCorpus - Global set of words from all documents
-	 * @param filePath - Absolute file path
-	 * @param pipeLine - pipeLine Object for stemming
-	 * @param docCount - total documents count
-	 * @return - Map containing keywords in the document 
-	 * along with their core values used for clustering
+	 * @param globalCorpus
+	 *            - Global set of words from all documents
+	 * @param filePath
+	 *            - Absolute file path
+	 * @param pipeLine
+	 *            - pipeLine Object for stemming
+	 * @param docCount
+	 *            - total documents count
+	 * @return - Map containing keywords in the document along with their core
+	 *         values used for clustering
 	 * @throws IOException
-	 * <br/><br/>
-	 * @Description The methods takes filePath as input and applies the 
-	 * following set of actions to document in filePath.
-	 * <br/><em>1. Removes all words expect words mentioned
-	 * in static POSTAG_LIST</em>
-	 * <br/><em>2. Apply Stemming & Lemmatization for the 
-	 * remaining set of words in each and every document</em>
-	 * <br/><em>3. Calculate the word count for each lemma for 
-	 * all documents</em>
-	 * <br/> <em>4. Update the Global Corpus from all the documents</em>
+	 * <br/>
+	 * <br/>
+	 * @Description The methods takes filePath as input and applies the
+	 *              following set of actions to document in filePath. <br/>
+	 *              <em>1. Removes all words expect words mentioned
+	 * in static POSTAG_LIST</em> <br/>
+	 *              <em>2. Apply Stemming & Lemmatization for the 
+	 * remaining set of words in each and every document</em> <br/>
+	 *              <em>3. Calculate the word count for each lemma for 
+	 * all documents</em> <br/>
+	 *              <em>4. Update the Global Corpus from all the documents</em>
 	 */
-	public Map<String,CorpusValue> removeStopWordfromFile(Map<String, CorpusValue> globalCorpus,
-			Path filePath, StanfordCoreNLP pipeLine, Integer docCount)
-			throws IOException {
+	public Map<String, CorpusValue> removeStopWordfromFile(
+			Map<String, CorpusValue> globalCorpus, Path filePath,
+			StanfordCoreNLP pipeLine, Integer docCount) throws IOException {
 		BufferedReader reader = Files.newBufferedReader(filePath,
 				StandardCharsets.UTF_8);
 		Map<String, CorpusValue> keyWords = new HashMap<String, CorpusValue>();
@@ -203,29 +213,22 @@ public class StopWordNewServiceImpl implements StopWordService {
 		while ((line = reader.readLine()) != null) {
 			content.append(line);
 		}
-		
+
 		StringTokenizer st = new StringTokenizer(content.toString());
 		while (st.hasMoreTokens()) {
 
 			/*
-			 * JJ-Adjective;
-			 * JJR-Adjective,comparative;
-			 * JJS-Adjective,superlative;
-			 * NN-Noun,singular; 
-			 * NNS-Noun,plural; 
-			 * NNP-Proper noun,singular;
-			 * NNPS-Proper noun,plural; 
-			 * VB-Verb, base form ;
-			 * VBD-Verb, past tense; 
-			 * VBG-Verb, gerund or present participle; 
-			 * VBN-Verb, past participle; 
-			 * VBP-Verb, non­3rd person singular present; 
-			 * VBZ-Verb, 3rd person singular present;
+			 * JJ-Adjective; JJR-Adjective,comparative;
+			 * JJS-Adjective,superlative; NN-Noun,singular; NNS-Noun,plural;
+			 * NNP-Proper noun,singular; NNPS-Proper noun,plural; VB-Verb, base
+			 * form ; VBD-Verb, past tense; VBG-Verb, gerund or present
+			 * participle; VBN-Verb, past participle; VBP-Verb, non­3rd person
+			 * singular present; VBZ-Verb, 3rd person singular present;
 			 */
 			String s = st.nextToken();
 			/*
-			 * Process tokens that has any one of the tags listed
-			 * in POSTAG_LIST. Remaining tokens are skipped
+			 * Process tokens that has any one of the tags listed in
+			 * POSTAG_LIST. Remaining tokens are skipped
 			 */
 			if (MiningConstants.POSTAG_LIST
 					.contains(s.substring(s.indexOf("/") + 1))) {
@@ -234,10 +237,9 @@ public class StopWordNewServiceImpl implements StopWordService {
 				 */
 				String stemmedWord = getStemmedWord(
 						s.substring(0, s.indexOf("/")).toLowerCase(), pipeLine);
-				/* 
-				 * Current Document Corpus
-				 * Check for keyword in list, increment value if already present
-				 * add to list if not present
+				/*
+				 * Current Document Corpus Check for keyword in list, increment
+				 * value if already present add to list if not present
 				 */
 				CorpusValue count = keyWords.get(stemmedWord);
 				if (count == null) {
@@ -245,18 +247,17 @@ public class StopWordNewServiceImpl implements StopWordService {
 				} else {
 					count.increment();
 				}
-				/* 
-				 * Global Corpus
-				 * Check for keyword in list, increment value if already present
-				 * add to list if not present.
-				 * Increment dft value only once per keyword per document
+				/*
+				 * Global Corpus Check for keyword in list, increment value if
+				 * already present add to list if not present. Increment dft
+				 * value only once per keyword per document
 				 */
 				CorpusValue globalcount = globalCorpus.get(stemmedWord);
 				if (globalcount == null) {
 					globalCorpus.put(stemmedWord, new CorpusValue(docCount));
 				} else {
 					globalcount.increment();
-					if(keyWords.get(stemmedWord).get()==1) {
+					if (keyWords.get(stemmedWord).get() == 1) {
 						globalcount.incrementDFT();
 					}
 				}
@@ -268,14 +269,17 @@ public class StopWordNewServiceImpl implements StopWordService {
 		log.info(keyWords.size());
 		Set<String> keySet = keyWords.keySet();
 
-		/* Remove static list of stopwords defined in "stopwords_lemmatized" file */
+		/*
+		 * Remove static list of stopwords defined in "stopwords_lemmatized"
+		 * file
+		 */
 		List<String> words = FileUtils.readLines(new File(
 				"data/stop_word/stopwords_lemmatized"), "utf-8");
 		keySet.removeAll(new HashSet<String>(words));
 		log.info(keyWords.size());
 		log.info(keyWords);
-		
-		/* Calculate termfrequency for each term in the document*/
+
+		/* Calculate termfrequency for each term in the document */
 		tfidfService.calculateTF(keyWords);
 		return keyWords;
 	}
@@ -283,7 +287,7 @@ public class StopWordNewServiceImpl implements StopWordService {
 	/**
 	 * 
 	 * @param args
-	 * main method foe testing purpose
+	 *            main method foe testing purpose
 	 */
 	public static void main(String args[]) {
 
@@ -295,18 +299,18 @@ public class StopWordNewServiceImpl implements StopWordService {
 		sample.listFiles(path, files);
 		Properties props = new Properties();
 		props.put("annotators", "tokenize, ssplit, pos, lemma");
-		 StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
-		 
-		 System.out.println(sample.getStemmedWord("desk", pipeline));
-		 System.out.println(sample.getStemmedWord("table", pipeline));
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
+
+		System.out.println(sample.getStemmedWord("desk", pipeline));
+		System.out.println(sample.getStemmedWord("table", pipeline));
 
 		/*
 		 * for (Path filePath : files) { try {
 		 * sample.removeStopWordfromFile(globalCorpus
-		 * ,filePath,pipeline,files.size()); } catch (IOException e) { 
+		 * ,filePath,pipeline,files.size()); } catch (IOException e) {
 		 * Auto-generated catch block e.printStackTrace(); } }
 		 */
-		//sample.calculateCosineSimilarityMatrix(files);
+		// sample.calculateCosineSimilarityMatrix(files);
 	}
 
 	/**
@@ -315,15 +319,15 @@ public class StopWordNewServiceImpl implements StopWordService {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Map<String, CorpusValue> sortByValue(Map<String, CorpusValue> map) {
 		List<Map<String, CorpusValue>> list = new LinkedList(map.entrySet());
-		
-		/* Sort List using comparator*/
+
+		/* Sort List using comparator */
 		Collections.sort(list, new Comparator() {
 			public int compare(Object o1, Object o2) {
 				return ((Comparable) ((Map.Entry) (o1)).getValue())
 						.compareTo(((Map.Entry) (o2)).getValue());
 			}
 		});
-		
+
 		/* Add element to LinkedHashMap to preserve the insertion order */
 		Map<String, CorpusValue> result = new LinkedHashMap<String, CorpusValue>();
 		for (Iterator it = list.iterator(); it.hasNext();) {
@@ -335,14 +339,19 @@ public class StopWordNewServiceImpl implements StopWordService {
 
 	/**
 	 * 
-	 * @param hmap - Map values to be stored to file system
-	 * @param filePath - filePath where the values to be stored
-	 * @param pathKeyword - key file Path
-	 * @param writeToFileFlag - "true" indicates that values are to
-	 * be stored to file path as plain text(human readable).
-	 * @param serializeDataFlag = "true" indicates that the object to
-	 * be Serialized(non-human readable), easy to read the content back
-	 * to it's appropriate data structure. 
+	 * @param hmap
+	 *            - Map values to be stored to file system
+	 * @param filePath
+	 *            - filePath where the values to be stored
+	 * @param pathKeyword
+	 *            - key file Path
+	 * @param writeToFileFlag
+	 *            - "true" indicates that values are to be stored to file path
+	 *            as plain text(human readable).
+	 * @param serializeDataFlag
+	 *            = "true" indicates that the object to be Serialized(non-human
+	 *            readable), easy to read the content back to it's appropriate
+	 *            data structure.
 	 * @return
 	 */
 	public boolean writeListToFile(Map<?, ?> hmap, Path filePath,
@@ -354,7 +363,7 @@ public class StopWordNewServiceImpl implements StopWordService {
 		 * /var/tmp/mail/201407_tagged/<53C7EE0A.9070803@gmx.de>.tagged
 		 */
 		try {
-			
+
 			/* Writes to file as plain text if 'writeToFileFlag' is true */
 			if (writeToFileFlag) {
 				String filePathString = filePath.toString().replace("tagged",
@@ -368,8 +377,8 @@ public class StopWordNewServiceImpl implements StopWordService {
 				bw.write(hmap.toString());
 				bw.close();
 			}
-			
-			/* Serializes Object  if the 'serializeDataFlag' is set to true */
+
+			/* Serializes Object if the 'serializeDataFlag' is set to true */
 			if (serializeDataFlag) {
 				String serializationFilePath = filePath.toString().replace(
 						"tagged", pathKeyword + "_ser");
@@ -386,28 +395,31 @@ public class StopWordNewServiceImpl implements StopWordService {
 
 		} catch (Exception e) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception while saving data to file system : ", e.getCause()));
+					"Exception while saving data to file system : ",
+					e.getCause()));
 		}
 		return true;
 	}
 
 	/**
 	 * 
-	 * @param word - input word on which stemming to be applied
-	 * @param pipeLine - pipeLine Object to perform stemming
+	 * @param word
+	 *            - input word on which stemming to be applied
+	 * @param pipeLine
+	 *            - pipeLine Object to perform stemming
 	 * @return - stemmed word.
 	 */
 	public String getStemmedWord(String word, StanfordCoreNLP pipeLine) {
-		
-		/* Stemming of input word*/
+
+		/* Stemming of input word */
 		stem.setCurrent(word);
 		stem.stem();
 		String text = stem.getCurrent();
 		String lemma = "";
-		
+
 		edu.stanford.nlp.pipeline.Annotation document = pipeLine.process(text);
-		
-		/* Lemmatizing the stemmed word*/
+
+		/* Lemmatizing the stemmed word */
 		for (CoreMap sentence : document.get(SentencesAnnotation.class)) {
 			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
 				lemma = token.get(LemmaAnnotation.class);
@@ -419,14 +431,16 @@ public class StopWordNewServiceImpl implements StopWordService {
 
 	/**
 	 * 
-	 * @param filePath - file path where serialized object is stored
-	 * @param pathKeyword - key file path
+	 * @param filePath
+	 *            - file path where serialized object is stored
+	 * @param pathKeyword
+	 *            - key file path
 	 * @return - deserialized object
 	 */
 	public Object deserializeObject(Path filePath, String pathKeyword) {
 
 		Object keywords = null;
-		String filePathString=null;
+		String filePathString = null;
 		try {
 			if (pathKeyword != null) {
 				filePathString = filePath.toString().replace("tagged",
@@ -444,10 +458,12 @@ public class StopWordNewServiceImpl implements StopWordService {
 			fileIn.close();
 		} catch (IOException i) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception while deserializing object at : "+filePathString, i.getCause()));
+					"Exception while deserializing object at : "
+							+ filePathString, i.getCause()));
 		} catch (ClassNotFoundException c) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception in typecast during deserialization : "+filePathString, c.getCause()));
+					"Exception in typecast during deserialization : "
+							+ filePathString, c.getCause()));
 		}
 		return keywords;
 	}

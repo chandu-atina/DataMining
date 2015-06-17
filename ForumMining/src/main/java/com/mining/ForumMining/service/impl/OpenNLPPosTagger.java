@@ -49,8 +49,8 @@ public class OpenNLPPosTagger implements PoSTagger {
 	ApplicationProperties appProp;
 
 	/**
-	 * Tags the input string with it's appropriate POS tag 
-	 * and returns the tagged String.
+	 * Tags the input string with it's appropriate POS tag and returns the
+	 * tagged String.
 	 */
 	@SuppressWarnings("deprecation")
 	public String tagContent(String content) throws ClusterServiceException {
@@ -71,17 +71,19 @@ public class OpenNLPPosTagger implements PoSTagger {
 				try {
 					modelIn.close();
 				} catch (IOException e) {
-					throw new ClusterServiceException(new ErrorMessage(
-							"Exception while cloising FileInoutStream : modelIn !!", e.getCause()));
+					throw new ClusterServiceException(
+							new ErrorMessage(
+									"Exception while cloising FileInoutStream : modelIn !!",
+									e.getCause()));
 				}
 			}
 		}
 		return new String("OpenNLPPoSTagger");
 	}
-	
+
 	public boolean tagDocuments(String docLocation)
 			throws ClusterServiceException {
-		
+
 		appProp.setMailLocation(docLocation);
 		tagDocuments();
 		return true;
@@ -93,48 +95,56 @@ public class OpenNLPPosTagger implements PoSTagger {
 		List<Path> files = new ArrayList<Path>();
 		listFiles(path, files);
 		InputStream modelIn = null;
-		try{
-		modelIn = new FileInputStream(
-				"data/openNLPModels/en-pos-maxent.bin");
-		POSModel model = new POSModel(modelIn);
-		POSTaggerME tagger = new POSTaggerME(model);
+		try {
+			modelIn = new FileInputStream(
+					"data/openNLPModels/en-pos-maxent.bin");
+			POSModel model = new POSModel(modelIn);
+			POSTaggerME tagger = new POSTaggerME(model);
 
-		for (Path filePath : files) {
-			try {
-				tagFile(filePath,tagger);
-			} catch (IOException e) {
-				throw new ClusterServiceException(new ErrorMessage(
-						"Exception while taging file. File Path : "+filePath, e.getCause()));
+			for (Path filePath : files) {
+				try {
+					tagFile(filePath, tagger);
+				} catch (IOException e) {
+					throw new ClusterServiceException(new ErrorMessage(
+							"Exception while taging file. File Path : "
+									+ filePath, e.getCause()));
+				}
 			}
-		}
-		}catch(IOException e){
+		} catch (IOException e) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception while instantiating modeIn Object !! ", e.getCause()));
-		}finally {
+					"Exception while instantiating modeIn Object !! ",
+					e.getCause()));
+		} finally {
 			if (modelIn != null) {
 				try {
 					modelIn.close();
 				} catch (IOException e) {
-					throw new ClusterServiceException(new ErrorMessage(
-							"Exception while cloising FileInoutStream : modelIn !!", e.getCause()));
+					throw new ClusterServiceException(
+							new ErrorMessage(
+									"Exception while cloising FileInoutStream : modelIn !!",
+									e.getCause()));
 				}
 			}
 		}
 		return true;
 	}
+
 	/**
 	 * 
-	 * @param filePath - Location of input file
-	 * @param tagger - OpenNLP POS Tagger Object
+	 * @param filePath
+	 *            - Location of input file
+	 * @param tagger
+	 *            - OpenNLP POS Tagger Object
 	 * @return status - true/false
 	 * @throws IOException
-	 * <br/><br/>
-	 * @Description
-	 * Tags the file mentioned in filepath and write the 
-	 * tagged file to file system.
+	 * <br/>
+	 * <br/>
+	 * @Description Tags the file mentioned in filepath and write the tagged
+	 *              file to file system.
 	 */
 	@SuppressWarnings("deprecation")
-	public boolean tagFile(Path filePath,POSTaggerME tagger) throws IOException {
+	public boolean tagFile(Path filePath, POSTaggerME tagger)
+			throws IOException {
 		BufferedReader reader = Files.newBufferedReader(filePath,
 				StandardCharsets.UTF_8);
 		StringBuilder content = new StringBuilder();
@@ -142,9 +152,9 @@ public class OpenNLPPosTagger implements PoSTagger {
 		while ((line = reader.readLine()) != null) {
 			content.append(line);
 		}
-		
+
 		try {
-			
+
 			String taggedContent = tagger.tag(content.toString());
 			log.info(taggedContent);
 
@@ -160,9 +170,11 @@ public class OpenNLPPosTagger implements PoSTagger {
 			bw.write(taggedContent);
 			bw.close();
 		} catch (IOException e) {
-			throw new ClusterServiceException(new ErrorMessage(
-					"Excepiton while writing tagged content to file system !! ", e.getCause()));
-		} 
+			throw new ClusterServiceException(
+					new ErrorMessage(
+							"Excepiton while writing tagged content to file system !! ",
+							e.getCause()));
+		}
 		return true;
 	}
 
@@ -177,7 +189,7 @@ public class OpenNLPPosTagger implements PoSTagger {
 	/**
 	 * 
 	 * @param appProp
-	 * set the appprop object through Auto wiring
+	 *            set the appprop object through Auto wiring
 	 */
 	public void setAppProp(ApplicationProperties appProp) {
 		this.appProp = appProp;
@@ -185,8 +197,10 @@ public class OpenNLPPosTagger implements PoSTagger {
 
 	/**
 	 * 
-	 * @param path - File system locataion
-	 * @param files - stores all the files names mentioned in path
+	 * @param path
+	 *            - File system locataion
+	 * @param files
+	 *            - stores all the files names mentioned in path
 	 */
 	public void listFiles(Path path, List<Path> files) {
 		try {
@@ -202,14 +216,15 @@ public class OpenNLPPosTagger implements PoSTagger {
 			stream.close();
 		} catch (IOException e) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Excepiton while listings file in input path !! "+path, e.getCause()));
+					"Excepiton while listings file in input path !! " + path,
+					e.getCause()));
 		}
 	}
 
 	/**
 	 * 
 	 * @param args
-	 * main method for test purpose
+	 *            main method for test purpose
 	 */
 	public static void main(String args[]) {
 		OpenNLPPosTagger oTag = new OpenNLPPosTagger();

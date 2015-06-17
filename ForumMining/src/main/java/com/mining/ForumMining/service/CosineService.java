@@ -17,26 +17,32 @@ import com.mining.ForumMining.exception.ClusterServiceException;
  * 
  * @author chandrasekhara
  *
- * CosineService interface is a service layer which defines services 
- * to calculate the cosine similarity matrix for a set of documents
+ *         CosineService interface is a service layer which defines services to
+ *         calculate the cosine similarity matrix for a set of documents
  * 
  */
 public interface CosineService {
 
 	/**
 	 * 
-	 * @param doc1 - document vector List of Double values
-	 * @param doc2 - document vector List of Double values
+	 * @param doc1
+	 *            - document vector List of Double values
+	 * @param doc2
+	 *            - document vector List of Double values
 	 * @return Double - Cosine similarity between documents
 	 * @throws ClusterServiceException
-	 * <br/><br/> @Description calculates the cosine similarity between two document vectors
+	 * <br/>
+	 * <br/>
+	 *             @Description calculates the cosine similarity between two
+	 *             document vectors
 	 */
 	public Double getCosineSimilarity(List<Double> doc1, List<Double> doc2)
 			throws ClusterServiceException;
 
 	/**
 	 * 
-	 * @param tfidfVectorList - Document vector list
+	 * @param tfidfVectorList
+	 *            - Document vector list
 	 * @throws ClusterServiceException
 	 */
 	public void calculateCosineSimilarityMatrix(

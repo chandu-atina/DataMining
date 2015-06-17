@@ -59,14 +59,13 @@ public class EntryPoint {
 	@Autowired
 	@Qualifier("StopWordNewServiceImpl")
 	StopWordService stopWordService;
-	
 
 	@Autowired
 	TFIDFService tfidfService;
-	
+
 	@Autowired
 	CosineService cosineService;
-	
+
 	/**
 	 * main method is the starting point of clustering
 	 */
@@ -122,7 +121,7 @@ public class EntryPoint {
 
 			keySet.removeAll(new HashSet<String>(words));
 			log.info(globalCorpus.size());
-			
+
 			/*
 			 * Calculate tfidf value for each and every document
 			 */
@@ -131,22 +130,23 @@ public class EntryPoint {
 						doc, globalCorpus);
 				tfidfVectorList.add(docVector);
 			}
-			
+
 			/*
 			 * Calcualte cosine similarity matrix from the document vectors
 			 */
 			cosineService.calculateCosineSimilarityMatrix(tfidfVectorList);
-			
+
 			/*
 			 * Applying Clustering on cosine similarity matrix
 			 */
-			//TODO: CLustering of documents based on cosine similarity matrix
-			
+			// TODO: CLustering of documents based on cosine similarity matrix
+
 			/*
 			 * Labelling of clusters
 			 */
-			//TODO: Applying labels to clusters based on the keywords in the document vectors
-			
+			// TODO: Applying labels to clusters based on the keywords in the
+			// document vectors
+
 		} catch (IOException e) {
 			throw new ClusterServiceException(new ErrorMessage(e.getMessage(),
 					e.getCause()));

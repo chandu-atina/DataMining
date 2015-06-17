@@ -34,9 +34,9 @@ import com.mining.ForumMining.service.CosineService;
  * 
  * @author chandrasekhara
  *
- * CosineService class is a service layer which implements services
- * defined in CosineService such as
- * calculation of cosine similarity matrix for a set of documents
+ *         CosineService class is a service layer which implements services
+ *         defined in CosineService such as calculation of cosine similarity
+ *         matrix for a set of documents
  * 
  */
 @Service
@@ -86,14 +86,15 @@ public class CosineSimilarityImpl implements CosineService {
 		ExecutorService es = Executors.newCachedThreadPool();
 		try {
 			/*
-			 * Load Balancing between the threads as the no.of operations reduces as we come down the matrix
+			 * Load Balancing between the threads as the no.of operations
+			 * reduces as we come down the matrix
 			 */
 			for (int i = MiningConstants.MAX_THREAD_COUNT; i >= 1; i--) {
 				threadLoadBalance.add((int) Math.round(Math
 						.sqrt(operationsPerThread * 2 * i)
 						- Math.sqrt(operationsPerThread * 2 * (i - 1))));
 			}
-			
+
 			int prevEnd = -1;
 			/*
 			 * Creating thread pool with thread count deifned in properties file
@@ -107,8 +108,9 @@ public class CosineSimilarityImpl implements CosineService {
 			}
 
 			es.shutdown();
-			/* Waits for one hour or till processing completes, which
-			 * ever is minimum
+			/*
+			 * Waits for one hour or till processing completes, which ever is
+			 * minimum
 			 */
 			boolean finshed = es.awaitTermination(1, TimeUnit.HOURS);
 
@@ -117,7 +119,7 @@ public class CosineSimilarityImpl implements CosineService {
 			File file = new File(filePathString);
 			file.getParentFile().mkdirs();
 			file.createNewFile();
-			/* 
+			/*
 			 * Write the cosine similarity matrix to file system
 			 */
 			FileWriter fw = new FileWriter(file.getAbsoluteFile());
@@ -126,10 +128,11 @@ public class CosineSimilarityImpl implements CosineService {
 			bw.close();
 			long endTime = Calendar.getInstance().getTimeInMillis();
 			log.info("end of cosine similarity.Time : " + (endTime - startTime));
-		}catch(IOException i){
+		} catch (IOException i) {
 			throw new ClusterServiceException(new ErrorMessage(
-					"Exception while writng cosine matrix to file system : ", i.getCause()));
-		}catch(InterruptedException e){
+					"Exception while writng cosine matrix to file system : ",
+					i.getCause()));
+		} catch (InterruptedException e) {
 			throw new ClusterServiceException(new ErrorMessage(
 					"Exception in executor service : ", e.getCause()));
 		}
@@ -182,15 +185,20 @@ public class CosineSimilarityImpl implements CosineService {
 
 	/**
 	 * 
-	 * @param startIndex -row start index for matrix
-	 * @param endIndex - row end index
-	 * @param cosineMatrix - stores the cosine similarity values for documents
-	 * @param tfidfVectorList - list of document vectors
+	 * @param startIndex
+	 *            -row start index for matrix
+	 * @param endIndex
+	 *            - row end index
+	 * @param cosineMatrix
+	 *            - stores the cosine similarity values for documents
+	 * @param tfidfVectorList
+	 *            - list of document vectors
 	 * @throws ClusterServiceException
-	 * <br/> <br/>
-	 * @Description Thread is responsible for processing the rows 
-	 * between startIndex and endIndex(both inclusive)
-	 * of cosine similarity matrix
+	 * <br/>
+	 * <br/>
+	 * @Description Thread is responsible for processing the rows between
+	 *              startIndex and endIndex(both inclusive) of cosine similarity
+	 *              matrix
 	 */
 	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
 			Double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList)

@@ -26,14 +26,14 @@ import com.mining.ForumMining.service.TFIDFService;
  * 
  * @author chandrasekhara
  *
- * TFIDFService class is a service layer which implements services 
- * define in TDIDFService interface like term frequency, 
- * inverse document frequency, tfidf weight, document vector and dft
+ *         TFIDFService class is a service layer which implements services
+ *         define in TDIDFService interface like term frequency, inverse
+ *         document frequency, tfidf weight, document vector and dft
  * 
  */
 @Service
 public class TFIDFServiceImpl implements TFIDFService {
-	
+
 	final static Logger log = Logger.getLogger(TFIDFServiceImpl.class);
 
 	/**
@@ -53,8 +53,8 @@ public class TFIDFServiceImpl implements TFIDFService {
 	}
 
 	/**
-	 * calculates the inverse document frequency for each and 
-	 * every term in the map
+	 * calculates the inverse document frequency for each and every term in the
+	 * map
 	 */
 	public void calculateIDF(Map<String, CorpusValue> keyValueMap)
 			throws ClusterServiceException {
@@ -63,8 +63,8 @@ public class TFIDFServiceImpl implements TFIDFService {
 	}
 
 	/**
-	 * Calculates dft(no.of documents in which term 't' appears)
-	 * for each and very term in <em>keyValueMap</em>
+	 * Calculates dft(no.of documents in which term 't' appears) for each and
+	 * very term in <em>keyValueMap</em>
 	 */
 	public void calculateDFT(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
@@ -75,12 +75,17 @@ public class TFIDFServiceImpl implements TFIDFService {
 					* (1 + Math.log(corpus.getTotalDocCount() - corpus.getDft())));
 		}
 	}
+
 	/*
 	 * (non-Javadoc)
-	 * @see com.mining.ForumMining.service.TFIDFService#calculateTFIDF(java.util.Map, java.util.Map)
-	 * Calculate tf*idf value for the document and returns the document vector
+	 * 
+	 * @see
+	 * com.mining.ForumMining.service.TFIDFService#calculateTFIDF(java.util.Map,
+	 * java.util.Map) Calculate tf*idf value for the document and returns the
+	 * document vector
 	 */
-	public Map<String,Double> calculateTFIDF(Map<String, CorpusValue> keyValueMap,
+	public Map<String, Double> calculateTFIDF(
+			Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
 			throws ClusterServiceException {
 		Iterator<Map.Entry<String, CorpusValue>> it = keyValueMap.entrySet()
@@ -88,18 +93,20 @@ public class TFIDFServiceImpl implements TFIDFService {
 		while (it.hasNext()) {
 			Entry<String, CorpusValue> entry = it.next();
 			entry.getValue().setDft(globalCorpa.get(entry.getKey()).getDft());
-			entry.getValue().setTfidf(entry.getValue().getTf()
-					* (1 + Math.log(entry.getValue().getTotalDocCount() /entry.getValue().getDft())));
-			//TODO: Remove if block after testing
-			if(entry.getValue().getTfidf()<-10){
+			entry.getValue().setTfidf(
+					entry.getValue().getTf()
+							* (1 + Math.log(entry.getValue().getTotalDocCount()
+									/ entry.getValue().getDft())));
+			// TODO: Remove if block after testing
+			if (entry.getValue().getTfidf() < -10) {
 				log.info(entry.getValue().getTfidf());
 			}
-			
+
 		}
-		Map<String,Double> docVector=new LinkedHashMap<String, Double>();
-		
-		Iterator<Map.Entry<String, CorpusValue>> globalIterator = globalCorpa.entrySet()
-				.iterator();
+		Map<String, Double> docVector = new LinkedHashMap<String, Double>();
+
+		Iterator<Map.Entry<String, CorpusValue>> globalIterator = globalCorpa
+				.entrySet().iterator();
 		while (globalIterator.hasNext()) {
 			Entry<String, CorpusValue> entry = globalIterator.next();
 			if (entry.getValue().get() <= MiningConstants.TERM_THRESHOLD_COUNT) {
@@ -116,7 +123,7 @@ public class TFIDFServiceImpl implements TFIDFService {
 	/**
 	 * 
 	 * @param args
-	 * main method for test purpose
+	 *            main method for test purpose
 	 */
 	public static void main(String args[]) {
 		Map<String, CorpusValue> keyValueMap = new HashMap<String, CorpusValue>();
@@ -131,13 +138,13 @@ public class TFIDFServiceImpl implements TFIDFService {
 
 		System.out.println(keyValueMap);
 	}
-	
+
 	/**
 	 * To be implemented
 	 */
 	public void calculateDocumentVector(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
-			throws ClusterServiceException{
-		
+			throws ClusterServiceException {
+
 	}
 }

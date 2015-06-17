@@ -14,44 +14,48 @@ import com.mining.ForumMining.exception.ClusterServiceException;
  * 
  * @author chandrasekhara
  *
- * PoSTagger interface is a service layer which defines services 
- * to apply parts of speech tagging for the documents
- * store on a file system or passed as an input string.
+ *         PoSTagger interface is a service layer which defines services to
+ *         apply parts of speech tagging for the documents store on a file
+ *         system or passed as an input string.
  * 
  */
 public interface PoSTagger {
-	
+
 	/**
 	 * 
-	 * @param content - String to be tagged
+	 * @param content
+	 *            - String to be tagged
 	 * @return tagged String
 	 * @throws ClusterServiceException
 	 */
 	public String tagContent(String content) throws ClusterServiceException;
-	
+
 	/**
 	 * 
-	 * @param docLocation - Location where the documents are stored
+	 * @param docLocation
+	 *            - Location where the documents are stored
 	 * @return true/false based on tagging output
 	 * @throws ClusterServiceException
-	 * <br/><br/>
+	 * <br/>
+	 * <br/>
 	 * @Description The services takes the docLocation as the base location and
-	 * search for all documents recursively in all the directories
-	 * inside base location and applies POS tags to each and every
-	 * word in the document.
+	 *              search for all documents recursively in all the directories
+	 *              inside base location and applies POS tags to each and every
+	 *              word in the document.
 	 */
-	public boolean tagDocuments(String docLocation) throws ClusterServiceException;
+	public boolean tagDocuments(String docLocation)
+			throws ClusterServiceException;
 
 	/**
 	 * 
 	 * @return true/false based on tagging output
 	 * @throws ClusterServiceException
-	 * <br/><br/>
-	 * @Description The services takes the default location from properties
-	 * file as the base location and search for all documents 
-	 * recursively in all the directories inside base location
-	 * and applies POS tags to each and every
-	 * word in the document.
+	 * <br/>
+	 * <br/>
+	 * @Description The services takes the default location from properties file
+	 *              as the base location and search for all documents
+	 *              recursively in all the directories inside base location and
+	 *              applies POS tags to each and every word in the document.
 	 */
 	public boolean tagDocuments() throws ClusterServiceException;
 }
