@@ -17,7 +17,7 @@ import com.mining.ForumMining.exception.ClusterServiceException;
  * 
  * @author chandrasekhara
  *
- * TFIDFService class is a service layer which exposes services 
+ * TFIDFService interface is a service layer which exposes services 
  * to calculate term frequency, inverse document frequency, 
  * tfidf weight, document vector and dft
  * 

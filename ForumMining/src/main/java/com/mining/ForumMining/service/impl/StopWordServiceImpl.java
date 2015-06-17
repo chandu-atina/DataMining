@@ -253,7 +253,7 @@ public class StopWordServiceImpl implements StopWordService {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	static Map<String, CorpusValue> sortByValue(Map<String, CorpusValue> map) {
+	public Map<String, CorpusValue> sortByValue1(Map<String, CorpusValue> map) {
 		List<Map<String, CorpusValue>> list = new LinkedList(map.entrySet());
 		Collections.sort(list, new Comparator() {
 			public int compare(Object o1, Object o2) {
@@ -507,5 +507,24 @@ public class StopWordServiceImpl implements StopWordService {
 				// .getCosineSimilarity(list1, list2);
 			}
 		}
+	}
+
+	public void removeStopWords(String docLocation,
+			Map<String, CorpusValue> globalCorpus)
+			throws ClusterServiceException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<Map<String, CorpusValue>> removeStopWords(
+			Map<String, CorpusValue> globalCorpus)
+			throws ClusterServiceException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Map<String, CorpusValue> sortByValue(Map<String, CorpusValue> map) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

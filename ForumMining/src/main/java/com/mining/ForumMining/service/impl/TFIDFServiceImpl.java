@@ -1,5 +1,13 @@
 package com.mining.ForumMining.service.impl;
 
+/*
+ * ##############################$History Card$###################################
+ * ### Latest changes description should be on the top of the history card list###
+ * ###############################################################################
+ *  Created Date	Updated Date	Author			Change Description
+ *  ============	============	============	===================
+ *  28/05/2015		29/05/2015		chandu-atina 	Initial basic version
+ */
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -14,11 +22,23 @@ import com.mining.ForumMining.core.CorpusValue;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.TFIDFService;
 
+/**
+ * 
+ * @author chandrasekhara
+ *
+ * TFIDFService class is a service layer which implements services 
+ * define in TDIDFService interface like term frequency, 
+ * inverse document frequency, tfidf weight, document vector and dft
+ * 
+ */
 @Service
 public class TFIDFServiceImpl implements TFIDFService {
 	
 	final static Logger log = Logger.getLogger(TFIDFServiceImpl.class);
 
+	/**
+	 * calculates the term frequency for each and every term in the map
+	 */
 	public void calculateTF(Map<String, CorpusValue> keyValueMap)
 			throws ClusterServiceException {
 
@@ -26,20 +46,26 @@ public class TFIDFServiceImpl implements TFIDFService {
 		for (CorpusValue corpus : keyValueMap.values()) {
 			sum += corpus.get();
 		}
-
 		for (CorpusValue corpus : keyValueMap.values()) {
 			corpus.setTf((float) corpus.get() / sum);
 			corpus.setTotalWordCount(sum);
 		}
-
 	}
 
+	/**
+	 * calculates the inverse document frequency for each and 
+	 * every term in the map
+	 */
 	public void calculateIDF(Map<String, CorpusValue> keyValueMap)
 			throws ClusterServiceException {
 		// TODO Auto-generated method stub
 
 	}
 
+	/**
+	 * Calculates dft(no.of documents in which term 't' appears)
+	 * for each and very term in <em>keyValueMap</em>
+	 */
 	public void calculateDFT(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
 			throws ClusterServiceException {
@@ -87,6 +113,11 @@ public class TFIDFServiceImpl implements TFIDFService {
 		return docVector;
 	}
 
+	/**
+	 * 
+	 * @param args
+	 * main method for test purpose
+	 */
 	public static void main(String args[]) {
 		Map<String, CorpusValue> keyValueMap = new HashMap<String, CorpusValue>();
 		keyValueMap.put("apple", new CorpusValue());
@@ -100,6 +131,10 @@ public class TFIDFServiceImpl implements TFIDFService {
 
 		System.out.println(keyValueMap);
 	}
+	
+	/**
+	 * To be implemented
+	 */
 	public void calculateDocumentVector(Map<String, CorpusValue> keyValueMap,
 			Map<String, CorpusValue> globalCorpa)
 			throws ClusterServiceException{

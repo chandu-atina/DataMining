@@ -18,7 +18,7 @@ import com.mining.ForumMining.exception.ClusterServiceException;
  * 
  * @author chandrasekhara
  *
- * StopWordService class is a service layer which exposes services 
+ * StopWordService interface is a service layer which define services 
  * to remove stop words from the list of documents.
  * 
  */

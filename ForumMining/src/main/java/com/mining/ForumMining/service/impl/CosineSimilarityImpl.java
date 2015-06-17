@@ -1,8 +1,17 @@
 package com.mining.ForumMining.service.impl;
 
+/*
+ * ##############################$History Card$###################################
+ * ### Latest changes description should be on the top of the history card list###
+ * ###############################################################################
+ *  Created Date	Updated Date	Author			Change Description
+ *  ============	============	============	===================
+ *  28/05/2015		29/05/2015		chandu-atina 	Initial basic version
+ */
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -21,11 +30,23 @@ import com.mining.ForumMining.constants.MiningConstants;
 import com.mining.ForumMining.exception.ClusterServiceException;
 import com.mining.ForumMining.service.CosineService;
 
+/**
+ * 
+ * @author chandrasekhara
+ *
+ * CosineService class is a service layer which implements services
+ * defined in CosineService such as
+ * calculation of cosine similarity matrix for a set of documents
+ * 
+ */
 @Service
 public class CosineSimilarityImpl implements CosineService {
 
 	final static Logger log = Logger.getLogger(StopWordServiceImpl.class);
 
+	/**
+	 * calculates the cosine similarity between two document vectors
+	 */
 	public Double getCosineSimilarity(List<Double> doc1, List<Double> doc2)
 			throws ClusterServiceException {
 		Double vectorProduct = 0.0;
@@ -64,17 +85,21 @@ public class CosineSimilarityImpl implements CosineService {
 		/* Creating and executor instance */
 		ExecutorService es = Executors.newCachedThreadPool();
 		try {
+			/*
+			 * Load Balancing between the threads as the no.of operations reduces as we come down the matrix
+			 */
 			for (int i = MiningConstants.MAX_THREAD_COUNT; i >= 1; i--) {
 				threadLoadBalance.add((int) Math.round(Math
 						.sqrt(operationsPerThread * 2 * i)
 						- Math.sqrt(operationsPerThread * 2 * (i - 1))));
 			}
+			
 			int prevEnd = -1;
+			/*
+			 * Creating thread pool with thread count deifned in properties file
+			 */
 			for (int i = 0; i < MiningConstants.MAX_THREAD_COUNT; i++) {
 
-				// cosineMatrix=es.submit(new
-				// CosineCalculationThread(cosineMatrix,
-				// filePaths,counter)).get();
 				es.execute(new CosineCalculationTask(cosineMatrix,
 						tfidfVectorList, prevEnd + 1, prevEnd
 								+ threadLoadBalance.get(i)));
@@ -82,6 +107,9 @@ public class CosineSimilarityImpl implements CosineService {
 			}
 
 			es.shutdown();
+			/* Waits for one hour or till processing completes, which
+			 * ever is minimum
+			 */
 			boolean finshed = es.awaitTermination(1, TimeUnit.HOURS);
 
 			log.info("Executor Flag :" + finshed);
@@ -89,20 +117,26 @@ public class CosineSimilarityImpl implements CosineService {
 			File file = new File(filePathString);
 			file.getParentFile().mkdirs();
 			file.createNewFile();
-
+			/* 
+			 * Write the cosine similarity matrix to file system
+			 */
 			FileWriter fw = new FileWriter(file.getAbsoluteFile());
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.write(Arrays.deepToString(cosineMatrix));
 			bw.close();
 			long endTime = Calendar.getInstance().getTimeInMillis();
 			log.info("end of cosine similarity.Time : " + (endTime - startTime));
-		} catch (Exception e) {
-
+		}catch(IOException i){
+			throw new ClusterServiceException(new ErrorMessage(
+					"Exception while writng cosine matrix to file system : ", i.getCause()));
+		}catch(InterruptedException e){
+			throw new ClusterServiceException(new ErrorMessage(
+					"Exception in executor service : ", e.getCause()));
 		}
 	}
 
 	/**
-	 * Inner class for threa creation
+	 * Inner class for thread creation
 	 */
 	public class CosineCalculationTask implements Runnable {
 
@@ -146,6 +180,18 @@ public class CosineSimilarityImpl implements CosineService {
 		}
 	}
 
+	/**
+	 * 
+	 * @param startIndex -row start index for matrix
+	 * @param endIndex - row end index
+	 * @param cosineMatrix - stores the cosine similarity values for documents
+	 * @param tfidfVectorList - list of document vectors
+	 * @throws ClusterServiceException
+	 * <br/> <br/>
+	 * @Description Thread is responsible for processing the rows 
+	 * between startIndex and endIndex(both inclusive)
+	 * of cosine similarity matrix
+	 */
 	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
 			Double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList)
 			throws ClusterServiceException {

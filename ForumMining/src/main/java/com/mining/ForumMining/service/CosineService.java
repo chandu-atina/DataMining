@@ -17,7 +17,7 @@ import com.mining.ForumMining.exception.ClusterServiceException;
  * 
  * @author chandrasekhara
  *
- * CosineService class is a service layer which exposes services 
+ * CosineService interface is a service layer which defines services 
  * to calculate the cosine similarity matrix for a set of documents
  * 
  */
