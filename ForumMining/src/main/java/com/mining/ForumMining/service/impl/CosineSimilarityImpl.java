@@ -68,7 +68,7 @@ public class CosineSimilarityImpl implements CosineService {
 		return Math.round(dotProduct * 100000000.0) / 100000000.0;
 	}
 
-	public void calculateCosineSimilarityMatrix(
+	public double[][] calculateCosineSimilarityMatrix(
 			List<Map<String, Double>> tfidfVectorList)
 			throws ClusterServiceException {
 
@@ -79,7 +79,7 @@ public class CosineSimilarityImpl implements CosineService {
 		int operationsPerThread = tfidfVectorList.size()
 				* tfidfVectorList.size() / 20;
 
-		Double[][] cosineMatrix = new Double[tfidfVectorList.size()][tfidfVectorList
+		double[][] cosineMatrix = new double[tfidfVectorList.size()][tfidfVectorList
 				.size()];
 
 		/* Creating and executor instance */
@@ -136,6 +136,7 @@ public class CosineSimilarityImpl implements CosineService {
 			throw new ClusterServiceException(new ErrorMessage(
 					"Exception in executor service : ", e.getCause()));
 		}
+		return cosineMatrix;
 	}
 
 	/**
@@ -143,12 +144,12 @@ public class CosineSimilarityImpl implements CosineService {
 	 */
 	public class CosineCalculationTask implements Runnable {
 
-		private Double[][] cosineMatrix;
+		private double[][] cosineMatrix;
 		private List<Map<String, Double>> tfidfVectorList;
 		private Integer startIndex;
 		private Integer endIndex;
 
-		public CosineCalculationTask(Double[][] cosineMatrix,
+		public CosineCalculationTask(double[][] cosineMatrix,
 				List<Map<String, Double>> tfidfVectorList, Integer startIndex,
 				Integer endIndex) {
 			super();
@@ -170,7 +171,7 @@ public class CosineSimilarityImpl implements CosineService {
 			}
 		}
 
-		public Double[][] call() throws Exception {
+		public double[][] call() throws Exception {
 			try {
 				calculateCosineSimilarity(startIndex, endIndex, cosineMatrix,
 						tfidfVectorList);
@@ -201,7 +202,7 @@ public class CosineSimilarityImpl implements CosineService {
 	 *              matrix
 	 */
 	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
-			Double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList)
+			double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList)
 			throws ClusterServiceException {
 		for (int i = startIndex; i <= endIndex; i++) {
 
