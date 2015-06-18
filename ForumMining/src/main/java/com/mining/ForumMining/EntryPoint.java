@@ -11,6 +11,10 @@ package com.mining.ForumMining;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -27,8 +31,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
 
+import com.apporiented.algorithm.clustering.AverageLinkageStrategy;
+import com.apporiented.algorithm.clustering.Cluster;
+import com.apporiented.algorithm.clustering.ClusteringAlgorithm;
+import com.apporiented.algorithm.clustering.DefaultClusteringAlgorithm;
+import com.apporiented.algorithm.clustering.visualization.DendrogramPanel;
 import com.crawl.web.exception.WebCrawlerServiceException;
 import com.crawl.web.service.CrawlerService;
+import com.crawl.web.util.ApplicationProperties;
 import com.crawl.web.util.messages.ErrorMessage;
 import com.mining.ForumMining.core.CorpusValue;
 import com.mining.ForumMining.exception.ClusterServiceException;
@@ -66,6 +76,9 @@ public class EntryPoint {
 	@Autowired
 	CosineService cosineService;
 
+	@Autowired
+	ApplicationProperties appProp;
+
 	/**
 	 * main method is the starting point of clustering
 	 */
@@ -102,10 +115,10 @@ public class EntryPoint {
 
 		try {
 			/* Crawls data from maven forum */
-			webCrawler.processRequest(true);
+			// webCrawler.processRequest(true);
 
 			/* Applies PosTagging for the data */
-			// posTagger.tagDocuments();
+			posTagger.tagDocuments();
 
 			/* Removes stop words, stemming and lemmatization */
 			List<Map<String, CorpusValue>> docList = stopWordService
@@ -134,13 +147,31 @@ public class EntryPoint {
 			/*
 			 * Calcualte cosine similarity matrix from the document vectors
 			 */
-			cosineService.calculateCosineSimilarityMatrix(tfidfVectorList);
+			double[][] cosinematrix = cosineService
+					.calculateCosineSimilarityMatrix(tfidfVectorList);
 
 			/*
 			 * Applying Clustering on cosine similarity matrix
 			 */
-			// TODO: CLustering of documents based on cosine similarity matrix
 
+			List<Path> files = new ArrayList<Path>();
+			String[] str = new String[cosinematrix[0].length];
+			Path path = Paths.get(appProp.getMailLocation());
+
+			this.listFiles(path, files);
+			int i = 0;
+			for (Path filePath : files) {
+				str[i] = filePath.toString();
+				i++;
+			}
+			ClusteringAlgorithm alg = new DefaultClusteringAlgorithm();
+			Cluster cluster = alg.performClustering(cosinematrix, str,
+					new AverageLinkageStrategy());
+			DendrogramPanel dp = new DendrogramPanel();
+			dp.setModel(cluster);
+			cluster.toConsole(30);
+
+			System.out.println(cluster.getName());
 			/*
 			 * Labelling of clusters
 			 */
@@ -152,5 +183,28 @@ public class EntryPoint {
 					e.getCause()));
 		}
 		return true;
+	}
+
+	public void listFiles(Path path, List<Path> files) {
+		try {
+			DirectoryStream<Path> stream = Files.newDirectoryStream(path);
+			/*
+			 * recursively checks for directories and lists all files In-Order
+			 * Tree Traversal
+			 */
+			for (Path entry : stream) {
+				if (Files.isDirectory(entry)) {
+					listFiles(entry, files);
+				} else {
+					if (entry.toString().endsWith(".tagged")) {
+						files.add(entry.getFileName());
+					}
+				}
+			}
+			stream.close();
+		} catch (IOException e) {
+			throw new ClusterServiceException(new ErrorMessage(
+					"Exception while listing files at : " + path, e.getCause()));
+		}
 	}
 }
