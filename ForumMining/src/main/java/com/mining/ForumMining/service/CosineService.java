@@ -45,7 +45,7 @@ public interface CosineService {
 	 *            - Document vector list
 	 * @throws ClusterServiceException
 	 */
-	public void calculateCosineSimilarityMatrix(
+	public double[][] calculateCosineSimilarityMatrix(
 			List<Map<String, Double>> tfidfVectorList)
 			throws ClusterServiceException;
 
