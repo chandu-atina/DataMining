@@ -210,13 +210,16 @@ public class CosineSimilarityImpl implements CosineService {
 					.get(i);
 
 			List<Double> list1 = new ArrayList<Double>(docVector1.values());
-
+			cosineMatrix[i][i] = 1;
+			
 			for (int j = i + 1; j < tfidfVectorList.size(); j++) {
 
 				Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) tfidfVectorList
 						.get(j);
 				List<Double> list2 = new ArrayList<Double>(docVector2.values());
-				cosineMatrix[i][j] = this.getCosineSimilarity(list1, list2);
+				double cosineSimilarity=this.getCosineSimilarity(list1, list2);
+				cosineMatrix[i][j] = cosineSimilarity;
+				cosineMatrix[j][i] = cosineSimilarity;
 			}
 		}
 	}

@@ -278,6 +278,7 @@ public class StopWordNewServiceImpl implements StopWordService {
 		keySet.removeAll(new HashSet<String>(words));
 		log.info(keyWords.size());
 		log.info(keyWords);
+		writeListToFile(keyWords, filePath, "stopword", true, false);
 
 		/* Calculate termfrequency for each term in the document */
 		tfidfService.calculateTF(keyWords);

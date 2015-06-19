@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
+
+import smile.clustering.KMeans;
 
 import com.apporiented.algorithm.clustering.AverageLinkageStrategy;
 import com.apporiented.algorithm.clustering.Cluster;
@@ -118,7 +121,7 @@ public class EntryPoint {
 			// webCrawler.processRequest(true);
 
 			/* Applies PosTagging for the data */
-			posTagger.tagDocuments();
+			//posTagger.tagDocuments();
 
 			/* Removes stop words, stemming and lemmatization */
 			List<Map<String, CorpusValue>> docList = stopWordService
@@ -164,14 +167,26 @@ public class EntryPoint {
 				str[i] = filePath.toString();
 				i++;
 			}
+			Map<String,String> name= new LinkedHashMap<String, String>();
+			
+			for(int j=0;j<str.length;j++){
+				name.put("doc"+(j+1), str[j]);
+				str[j] = "doc"+(j+1);
+			}
+			log.info(name);
 			ClusteringAlgorithm alg = new DefaultClusteringAlgorithm();
 			Cluster cluster = alg.performClustering(cosinematrix, str,
 					new AverageLinkageStrategy());
 			DendrogramPanel dp = new DendrogramPanel();
 			dp.setModel(cluster);
-			cluster.toConsole(30);
+			//cluster.toConsole(30);
+			this.toConsole(2, cluster);
 
-			System.out.println(cluster.getName());
+			log.info(cluster.getName());
+			
+			//KMeans k = new KMeans(cosinematrix, 20, 5, 2);
+		//	log.info(k);
+			
 			/*
 			 * Labelling of clusters
 			 */
@@ -207,4 +222,17 @@ public class EntryPoint {
 					"Exception while listing files at : " + path, e.getCause()));
 		}
 	}
+	
+    public void toConsole(int indent,Cluster c) {
+    	String s="";
+        for (int i = 0; i < indent; i++) {
+            s=s.concat(" ");
+        }
+        //String name = c.getName() + (c.isLeaf() ? " (leaf)" : "") + (c.getDistance() != null ? "  distance: " + c.getDistance() : "");
+        String name=c.getName();
+        log.info(s+name);
+        for (Cluster child : c.getChildren()) {
+            this.toConsole(indent + 2,child);
+        }
+    }
 }
