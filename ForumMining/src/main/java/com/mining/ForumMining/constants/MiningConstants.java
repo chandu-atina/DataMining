@@ -63,6 +63,10 @@ public class MiningConstants {
 	public static Double COSINE_SIMILARITY_THRESHOLD = 0.5;
 
 	public static Integer MAX_THREAD_COUNT = 10;
+	
+	public static String SIMILAR_MATRIX="SIMILAR";
+	
+	public static String DISSIMILAR_MATRIX="DISSIMILAR";
 
 	static {
 		POSTAG_LIST.add("JJ"); // Adjective

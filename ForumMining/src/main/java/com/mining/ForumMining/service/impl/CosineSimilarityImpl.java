@@ -69,7 +69,7 @@ public class CosineSimilarityImpl implements CosineService {
 	}
 
 	public double[][] calculateCosineSimilarityMatrix(
-			List<Map<String, Double>> tfidfVectorList)
+			List<Map<String, Double>> tfidfVectorList, String matrixType)
 			throws ClusterServiceException {
 
 		log.info("Staring calculation of cosine similarity matrix !!!");
@@ -103,7 +103,7 @@ public class CosineSimilarityImpl implements CosineService {
 
 				es.execute(new CosineCalculationTask(cosineMatrix,
 						tfidfVectorList, prevEnd + 1, prevEnd
-								+ threadLoadBalance.get(i)));
+								+ threadLoadBalance.get(i),matrixType));
 				prevEnd += threadLoadBalance.get(i);
 			}
 
@@ -148,22 +148,24 @@ public class CosineSimilarityImpl implements CosineService {
 		private List<Map<String, Double>> tfidfVectorList;
 		private Integer startIndex;
 		private Integer endIndex;
+		private String matrixType;
 
 		public CosineCalculationTask(double[][] cosineMatrix,
 				List<Map<String, Double>> tfidfVectorList, Integer startIndex,
-				Integer endIndex) {
+				Integer endIndex,String matrixType) {
 			super();
 			this.cosineMatrix = cosineMatrix;
 			this.tfidfVectorList = tfidfVectorList;
 			this.startIndex = startIndex;
 			this.endIndex = endIndex;
+			this.matrixType = matrixType;
 		}
 
 		public void run() {
 			try {
 				log.info(Thread.currentThread().getName() + " Started");
 				calculateCosineSimilarity(startIndex, endIndex, cosineMatrix,
-						tfidfVectorList);
+						tfidfVectorList,matrixType);
 				log.info(Thread.currentThread().getName() + " finished its job");
 			} catch (Exception e) {
 				throw new ClusterServiceException(new ErrorMessage(
@@ -174,7 +176,7 @@ public class CosineSimilarityImpl implements CosineService {
 		public double[][] call() throws Exception {
 			try {
 				calculateCosineSimilarity(startIndex, endIndex, cosineMatrix,
-						tfidfVectorList);
+						tfidfVectorList,matrixType);
 				return cosineMatrix;
 
 			} catch (Exception e) {
@@ -202,24 +204,37 @@ public class CosineSimilarityImpl implements CosineService {
 	 *              matrix
 	 */
 	public void calculateCosineSimilarity(Integer startIndex, Integer endIndex,
-			double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList)
-			throws ClusterServiceException {
+			double[][] cosineMatrix, List<Map<String, Double>> tfidfVectorList,
+			String matrixType)
+ throws ClusterServiceException {
 		for (int i = startIndex; i <= endIndex; i++) {
 
 			Map<String, Double> docVector1 = (LinkedHashMap<String, Double>) tfidfVectorList
 					.get(i);
 
 			List<Double> list1 = new ArrayList<Double>(docVector1.values());
-			cosineMatrix[i][i] = 1;
-			
+
+			/* matrixType check */
+			if (MiningConstants.SIMILAR_MATRIX.equals(matrixType)) {
+				cosineMatrix[i][i] = 1;
+			} else {
+				cosineMatrix[i][i] = 0;
+			}
+
 			for (int j = i + 1; j < tfidfVectorList.size(); j++) {
 
 				Map<String, Double> docVector2 = (LinkedHashMap<String, Double>) tfidfVectorList
 						.get(j);
 				List<Double> list2 = new ArrayList<Double>(docVector2.values());
-				double cosineSimilarity=this.getCosineSimilarity(list1, list2);
-				cosineMatrix[i][j] = cosineSimilarity;
-				cosineMatrix[j][i] = cosineSimilarity;
+				double cosineSimilarity = this
+						.getCosineSimilarity(list1, list2);
+				if (MiningConstants.SIMILAR_MATRIX.equals(matrixType)) {
+					cosineMatrix[i][j] = cosineSimilarity;
+					cosineMatrix[j][i] = cosineSimilarity;
+				} else {
+					cosineMatrix[i][j] = 1 / cosineSimilarity;
+					cosineMatrix[j][i] = 1 / cosineSimilarity;
+				}
 			}
 		}
 	}

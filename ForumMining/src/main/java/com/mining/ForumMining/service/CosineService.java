@@ -43,10 +43,13 @@ public interface CosineService {
 	 * 
 	 * @param tfidfVectorList
 	 *            - Document vector list
+	 * @param matrixType
+	 * 				i)  SIMILAR indicates similarity matrix
+	 * 				ii) DISSIMILAR indicates dissimilarity matrix
 	 * @throws ClusterServiceException
 	 */
 	public double[][] calculateCosineSimilarityMatrix(
-			List<Map<String, Double>> tfidfVectorList)
+			List<Map<String, Double>> tfidfVectorList, String matrixType)
 			throws ClusterServiceException;
 
 }
